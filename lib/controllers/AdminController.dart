@@ -95,6 +95,28 @@ class AdminController {
     }
   }
 
+  //buscar usuarios
+  Future<List<Map<String, dynamic>>> searchUsers(String query) async {
+    try {
+      final usersSnapshot = await _firestore
+          .collection('users')
+          .where('fullName', isGreaterThanOrEqualTo: query)
+          .where('fullName',
+              isLessThan: query +
+                  'z') // Asegúrate de que esto funcione para tu base de datos
+          .get();
+
+      final usersList = usersSnapshot.docs.map((doc) {
+        return doc.data() as Map<String, dynamic>;
+      }).toList();
+
+      return usersList;
+    } catch (e) {
+      print('Error al buscar usuarios: $e');
+      return [];
+    }
+  }
+
 //actualizar usuario
   Future<void> updateUser(UserModel user) async {
     try {

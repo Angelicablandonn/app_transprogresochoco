@@ -14,6 +14,12 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _originController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
+  final TextEditingController _availableSeatsController =
+      TextEditingController(); // Agregado
+  final TextEditingController _busTypeController =
+      TextEditingController(); // Agregado
+  final TextEditingController _descriptionController =
+      TextEditingController(); // Agregado
   DateTime _departureDateTime = DateTime.now();
   DateTime selectDateTime = DateTime.now();
   final TextEditingController _ticketPriceController = TextEditingController();
@@ -108,6 +114,19 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
               TextFormField(
                 controller: _destinationController,
                 decoration: InputDecoration(labelText: 'Destino'),
+              ),
+              TextFormField(
+                controller: _availableSeatsController,
+                decoration: InputDecoration(labelText: 'Asientos Disponibles'),
+              ),
+              TextFormField(
+                controller: _busTypeController,
+                decoration: InputDecoration(labelText: 'Tipo de Vehículo'),
+              ),
+              TextFormField(
+                controller: _descriptionController,
+                decoration:
+                    InputDecoration(labelText: 'Descripción de la Ruta'),
               ),
               ElevatedButton(
                 onPressed: () {

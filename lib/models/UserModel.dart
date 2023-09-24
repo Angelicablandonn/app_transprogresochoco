@@ -4,7 +4,6 @@ class UserModel {
   final String email; // Correo electrónico del usuario
   final String phoneNumber; // Número de teléfono del usuario
   String? profilePicture; // URL de la foto de perfil del usuario (opcional)
-  final List<String> favoriteRoutes; // Lista de rutas favoritas del usuario
   final bool isAdmin; // Indica si el usuario es un administrador
   final String password; // Contraseña del usuario
 
@@ -14,7 +13,6 @@ class UserModel {
     required this.email,
     required this.phoneNumber,
     this.profilePicture, // Permite una foto de perfil opcional
-    this.favoriteRoutes = const [], // Inicialmente, no tiene rutas favoritas
     this.isAdmin = false, // Por defecto, el usuario no es un administrador
     required this.password, // Agregar la contraseña al constructor
   });
@@ -26,7 +24,6 @@ class UserModel {
     String? email,
     String? phoneNumber,
     String? profilePicture,
-    List<String>? favoriteRoutes,
     bool? isAdmin,
     String? password, // Agregar la contraseña al método copyWith
   }) {
@@ -36,7 +33,6 @@ class UserModel {
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       profilePicture: profilePicture ?? this.profilePicture,
-      favoriteRoutes: favoriteRoutes ?? this.favoriteRoutes,
       isAdmin: isAdmin ?? this.isAdmin,
       password: password ?? this.password, // Copiar la contraseña
     );
@@ -50,7 +46,6 @@ class UserModel {
       'email': email,
       'phoneNumber': phoneNumber,
       'profilePicture': profilePicture,
-      'favoriteRoutes': favoriteRoutes,
       'isAdmin': isAdmin,
       'password': password, // Agregar la contraseña al mapa
     };
@@ -63,7 +58,6 @@ class UserModel {
       email: map['email'],
       phoneNumber: map['phoneNumber'],
       profilePicture: map['profilePicture'],
-      favoriteRoutes: List<String>.from(map['favoriteRoutes']),
       isAdmin: map['isAdmin'],
       password: map['password'],
     );

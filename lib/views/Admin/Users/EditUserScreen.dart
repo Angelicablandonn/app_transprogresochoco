@@ -3,7 +3,6 @@ import 'package:app_transprogresochoco/models/UserModel.dart'; // Importa tu mod
 import 'package:app_transprogresochoco/controllers/AdminController.dart'; // Importa tu controlador aquí
 
 class EditUserScreen extends StatefulWidget {
-
   final String uid;
   final UserModel user; // Asegúrate de tener este argumento
 
@@ -50,7 +49,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
       email: _emailController.text,
       phoneNumber: _phoneNumberController.text,
       profilePicture: widget.user.profilePicture, // Mantén la imagen actual
-      favoriteRoutes: widget.user.favoriteRoutes, // Mantén las rutas favoritas
       isAdmin: widget.user.isAdmin, // Mantén el estado de administrador
       password: _passwordController.text, // Actualiza la contraseña
     );

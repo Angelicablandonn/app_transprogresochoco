@@ -10,6 +10,8 @@ class ListUsersView extends StatefulWidget {
 class _ListUsersViewState extends State<ListUsersView> {
   final AdminController _adminController = AdminController();
   late Future<List<Map<String, dynamic>>> _userListFuture;
+  TextEditingController _searchController =
+      TextEditingController(); // Nuevo controlador para el campo de búsqueda
 
   @override
   void initState() {
@@ -33,6 +35,22 @@ class _ListUsersViewState extends State<ListUsersView> {
     }
   }
 
+  Future<void> _searchUsers(String query) async {
+    try {
+      final userList = await _adminController.searchUsers(query);
+      setState(() {
+        _userListFuture = Future.value(userList);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al buscar usuarios: $e'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,6 +62,23 @@ class _ListUsersViewState extends State<ListUsersView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Agregar campo de búsqueda
+            TextField(
+              controller: _searchController,
+              onChanged: (query) {
+                if (query.isEmpty) {
+                  _loadUserList(); // Cargar todos los usuarios
+                } else {
+                  _searchUsers(
+                      query); // Realizar búsqueda a medida que se escribe
+                }
+              },
+              decoration: InputDecoration(
+                labelText: 'Buscar usuarios por nombre o correo electrónico',
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+            SizedBox(height: 16.0),
             Text(
               'Usuarios Registrados:',
               style: TextStyle(
@@ -57,86 +92,36 @@ class _ListUsersViewState extends State<ListUsersView> {
                 future: _userListFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                    final userList = snapshot.data!;
-                    return ListView.builder(
-                      itemCount: userList.length,
-                      itemBuilder: (context, index) {
-                        final user = userList[index];
-                        final fullName = user['fullName'] ?? '';
-                        final email = user['email'] ?? '';
-
-                        return ListTile(
-                          title: Text(fullName),
-                          subtitle: Text(email),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.edit),
-                                onPressed: () {
-                                  final uid = user[
-                                      'uid']; // Obtén el UID del usuario que se va a editar
-                                  Navigator.of(context)
-                                      .pushNamed('/edit_user', arguments: {
-                                    'uid':
-                                        uid, // Asegúrate de tener el UID correcto
-                                    'user':
-                                        user, // Asegúrate de tener el UserModel correcto
-                                  });
-                                },
-                              ),
-                              // En el itemBuilder de ListView.builder en ListUsersView
-                              IconButton(
-                                icon: Icon(Icons.delete),
-                                onPressed: () {
-                                  final uid = user['uid'];
-                                  final fullName = user['fullName'];
-
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title: Text('Confirmar Eliminación'),
-                                        content: Text(
-                                            '¿Seguro que deseas eliminar a $fullName?'),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            child: Text('Cancelar'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                          TextButton(
-                                            child: Text('Eliminar'),
-                                            onPressed: () async {
-                                              // Llama a la función para eliminar el usuario
-                                              await _adminController
-                                                  .deleteUser(uid);
-
-                                              // Cierra el cuadro de diálogo de confirmación
-                                              Navigator.of(context).pop();
-
-                                              // Actualiza la lista de usuarios (puedes usar setState o cargar nuevamente la lista)
-                                              _loadUserList();
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                              )
-                            ],
-                          ),
-                        );
-                      },
+                    return Center(
+                      child: CircularProgressIndicator(),
                     );
+                  } else if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                          'Error al cargar la lista de usuarios: ${snapshot.error}'),
+                    );
+                  } else if (snapshot.hasData) {
+                    final userList = snapshot.data!;
+                    if (userList.isEmpty) {
+                      return Center(
+                        child: Text('No se encontraron usuarios'),
+                      );
+                    } else {
+                      return ListView.builder(
+                        itemCount: userList.length,
+                        itemBuilder: (context, index) {
+                          final user = UserModel.fromMap(userList[index]);
+                          return ListTile(
+                            title: Text(user.fullName),
+                            subtitle: Text(user.email),
+                          );
+                        },
+                      );
+                    }
                   } else {
-                    return Center(child: Text('No hay usuarios registrados.'));
+                    return Center(
+                      child: Text('No se encontraron usuarios'),
+                    );
                   }
                 },
               ),

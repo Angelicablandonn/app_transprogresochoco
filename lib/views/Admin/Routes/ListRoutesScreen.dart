@@ -44,6 +44,7 @@ class _ListRoutesScreenState extends State<ListRoutesScreen> {
         itemBuilder: (context, index) {
           final route = _routes[index];
           return ListTile(
+            leading: Image.network(route.imageUrl), // Agrega esta línea
             title: Text(route.name),
             subtitle:
                 Text('Origen: ${route.origin}, Destino: ${route.destination}'),
@@ -127,6 +128,7 @@ class RouteDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            Image.network(route.imageUrl), // Agrega esta línea
             Text('Nombre de la Ruta: ${route.name}'),
             Text('Origen: ${route.origin}'),
             Text('Destino: ${route.destination}'),

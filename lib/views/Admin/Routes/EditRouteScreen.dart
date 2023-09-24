@@ -22,6 +22,7 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
   final TextEditingController _busTypeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _imageUrlController = TextEditingController();
+  DateTime _departureDateTime = DateTime.now(); // Agregado
 
   @override
   void initState() {
@@ -43,7 +44,34 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
       _busTypeController.text = route.busType;
       _descriptionController.text = route.description;
       _imageUrlController.text = route.imageUrl;
+      _departureDateTime = route.departureTime; // Actualizado
     });
+  }
+
+  Future<void> _selectDateTime(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _departureDateTime, // Usar la fecha actual de la ruta
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      final TimeOfDay? selectedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_departureDateTime),
+      );
+      if (selectedTime != null) {
+        setState(() {
+          _departureDateTime = DateTime(
+            picked.year,
+            picked.month,
+            picked.day,
+            selectedTime.hour,
+            selectedTime.minute,
+          );
+        });
+      }
+    }
   }
 
   @override
@@ -90,6 +118,16 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
                 controller: _imageUrlController,
                 decoration: InputDecoration(labelText: 'URL de la Imagen'),
               ),
+              ElevatedButton(
+                onPressed: () {
+                  _selectDateTime(context);
+                },
+                child: Text('Seleccionar Fecha y Hora de Salida'),
+              ),
+              Text(
+                'Fecha y Hora de Salida: ${_departureDateTime.toLocal()}'
+                    .split('.')[0],
+              ),
               SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: () async {
@@ -98,8 +136,7 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
                     name: _nameController.text,
                     origin: _originController.text,
                     destination: _destinationController.text,
-                    departureTime:
-                        DateTime.now(), // Cambia esto con el valor deseado
+                    departureTime: _departureDateTime, // Actualizado
                     ticketPrice: double.parse(_ticketPriceController.text),
                     availableSeats: int.parse(_availableSeatsController.text),
                     busType: _busTypeController.text,
