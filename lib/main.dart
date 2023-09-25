@@ -12,6 +12,11 @@ import 'views/Admin/Routes/EditRouteScreen.dart';
 import 'views/Admin/Routes/AddRouteScreen.dart';
 import 'views/Admin/Routes/ListRoutesScreen.dart';
 
+// Importa las vistas de ventas de tiquetes y sus respectivos editores y eliminadores aquí
+import 'package:app_transprogresochoco/views/Admin/Tickets/AddTicketSale.dart';
+import 'package:app_transprogresochoco/views/Admin/Tickets/EditTicketSaleScreen.dart';
+import 'package:app_transprogresochoco/views/Admin/Tickets/TicketSalesListScreen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -70,6 +75,10 @@ class MyApp extends StatelessWidget {
           return EditRouteScreen(routeId: routeId);
         },
         '/list_routes': (context) => ListRoutesScreen(),
+
+        // Rutas relacionadas con las ventas de tiquetes
+        '/add_ticket_sale': (context) => AddTicketSaleView(),
+        '/list_ticket_sales': (context) => TicketSalesListScreen(),
       },
     );
   }

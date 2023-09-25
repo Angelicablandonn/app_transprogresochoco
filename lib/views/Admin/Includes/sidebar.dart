@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:app_transprogresochoco/views/Admin/Users/AddUserView.dart';
-import 'package:app_transprogresochoco/views/Admin/Users/ListUsersView.dart';
 
 class Sidebar extends StatelessWidget {
   @override
@@ -54,6 +52,26 @@ class Sidebar extends StatelessWidget {
                 },
               ),
               // Agrega más elementos de menú relacionados con rutas si es necesario
+            ],
+          ),
+
+          // Opción "Ventas de Tiquetes"
+          ExpansionTile(
+            title: Text('Ventas de Tiquetes'),
+            children: [
+              ListTile(
+                title: Text('Agregar Venta de Tiquete'),
+                onTap: () {
+                  Navigator.of(context).pushNamed('/add_ticket_sale');
+                },
+              ),
+              ListTile(
+                title: Text('Listar Ventas de Tiquetes'),
+                onTap: () {
+                  Navigator.of(context).pushNamed('/list_ticket_sales');
+                },
+              ),
+              // Puedes agregar más elementos de menú relacionados con ventas de tiquetes si es necesario
             ],
           ),
 

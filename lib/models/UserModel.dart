@@ -1,11 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String uid; // Identificador único del usuario
   final String fullName; // Nombre completo del usuario
   final String email; // Correo electrónico del usuario
   final String phoneNumber; // Número de teléfono del usuario
-  String? profilePicture; // URL de la foto de perfil del usuario (opcional)
+  String? profilePicture; // URL de la foto de perfil del usuario
   final bool isAdmin; // Indica si el usuario es un administrador
-  final String password; // Contraseña del usuario
+  final String password; // Contraseña del usuario>>>>>>>>>>
 
   UserModel({
     required this.uid,

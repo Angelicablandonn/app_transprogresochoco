@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:app_transprogresochoco/models/RouteModel.dart';
+import 'package:app_transprogresochoco/models/TicketSale.dart';
 import 'dart:io';
 
 class AdminController {
@@ -225,5 +226,102 @@ class AdminController {
     }
 
     return null;
+  }
+
+  // Método para buscar rutas por nombre de origen y destino
+  Future<List<RouteModel>> searchRoutes(
+      String origin, String destination) async {
+    try {
+      // Realiza una consulta a la base de datos para buscar rutas que coincidan
+      // con los criterios de origen y destino.
+      final querySnapshot = await _firestore
+          .collection('routes')
+          .where('origin', isEqualTo: origin)
+          .where('destination', isEqualTo: destination)
+          .get();
+
+      // Mapea los documentos a objetos RouteModel y devuelve la lista de rutas.
+      final routeList = querySnapshot.docs.map((doc) {
+        final routeData = doc.data() as Map<String, dynamic>;
+        return RouteModel.fromMap(routeData, doc.id);
+      }).toList();
+
+      return routeList;
+    } catch (e) {
+      print('Error al buscar rutas: $e');
+      return []; // Devuelve una lista vacía en caso de error.
+    }
+  }
+
+  // Agregar una venta de tiquete a Firestore
+  Future<void> addTicketSale(
+    TicketSale ticketSale,
+    RouteModel selectedRoute,
+    int quantity,
+  ) async {
+    try {
+      // Calcular el monto total de la venta
+      final double amount = selectedRoute.ticketPrice * quantity;
+
+      // Crear una instancia de TicketSale con los datos necesarios
+      final TicketSale newTicketSale = TicketSale(
+        id: '',
+        customerName: ticketSale.customerName,
+        customerEmail: ticketSale.customerEmail,
+        amount: amount,
+        quantity: quantity,
+        paymentMethod: ticketSale.paymentMethod,
+        saleDate: Timestamp.now(),
+        routeId: selectedRoute.id,
+        ticketPrice: selectedRoute.ticketPrice,
+      );
+
+      // Guardar la venta de tiquete en Firestore
+      await _firestore.collection('ticket_sales').add(newTicketSale.toMap());
+
+      print('Venta de tiquete agregada con éxito.');
+    } catch (e) {
+      print('Error al agregar la venta de tiquete: $e');
+    }
+  }
+
+// Obtener todas las ventas de tiquetes desde Firestore
+  Future<List<TicketSale>> getTicketSales() async {
+    try {
+      final salesSnapshot = await _firestore.collection('ticket_sales').get();
+      final salesList = salesSnapshot.docs.map((doc) {
+        return TicketSale.fromFirestore(doc); // Corrección en esta línea
+      }).toList();
+
+      return salesList;
+    } catch (e) {
+      print('Error al obtener las ventas de tiquetes: $e');
+      return [];
+    }
+  }
+
+  // Actualizar una venta de tiquete en Firestore
+  Future<void> updateTicketSale(TicketSale ticketSale) async {
+    try {
+      await _firestore
+          .collection('ticket_sales')
+          .doc(ticketSale.id)
+          .update(ticketSale.toMap());
+
+      print('Venta de tiquete actualizada con éxito.');
+    } catch (e) {
+      print('Error al actualizar la venta de tiquete: $e');
+    }
+  }
+
+  // Eliminar una venta de tiquete en Firestore
+  Future<void> deleteTicketSale(String ticketSaleId) async {
+    try {
+      await _firestore.collection('ticket_sales').doc(ticketSaleId).delete();
+
+      print('Venta de tiquete eliminada con éxito.');
+    } catch (e) {
+      print('Error al eliminar la venta de tiquete: $e');
+    }
   }
 }
