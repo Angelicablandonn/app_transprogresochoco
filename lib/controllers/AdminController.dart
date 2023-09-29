@@ -285,6 +285,25 @@ class AdminController {
     }
   }
 
+  Future<RouteModel?> getRouteById(String routeId) async {
+    try {
+      final routeDoc = await FirebaseFirestore.instance
+          .collection('routes')
+          .doc(routeId)
+          .get();
+      if (routeDoc.exists) {
+        final routeData = routeDoc.data() as Map<String, dynamic>;
+        return RouteModel.fromMap(
+            routeData, routeId); // Utiliza fromMap para crear la instancia
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching route by ID: $e');
+      return null;
+    }
+  }
+
 // Obtener todas las ventas de tiquetes desde Firestore
   Future<List<TicketSale>> getTicketSales() async {
     try {

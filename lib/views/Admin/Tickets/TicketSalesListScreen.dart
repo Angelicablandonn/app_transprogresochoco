@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_transprogresochoco/controllers/AdminController.dart';
 import 'package:app_transprogresochoco/models/TicketSale.dart';
+import 'package:app_transprogresochoco/views/Admin/Tickets/EditTicketSaleScreen.dart';
 
 class TicketSalesListScreen extends StatefulWidget {
   @override
@@ -83,8 +84,12 @@ class _TicketSalesListScreenState extends State<TicketSalesListScreen> {
   }
 
   void _editTicketSale(TicketSale sale) {
-    // Implementa la lógica para editar la venta de tiquetes aquí, usando el controlador.
-    _controller.updateTicketSale(sale).then((_) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTicketSaleScreen(ticketSale: sale),
+      ),
+    ).then((result) {
       // Actualizar la lista después de editar la venta (si es necesario).
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(

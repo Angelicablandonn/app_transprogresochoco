@@ -13,8 +13,11 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
   final _formKey = GlobalKey<FormState>();
   final _controller = AdminController();
 
-  RouteModel? _selectedRoute;
+  String? _selectedRouteId;
   int _quantity = 1;
+  TextEditingController _customerNameController = TextEditingController();
+  TextEditingController _customerEmailController = TextEditingController();
+  TextEditingController _paymentMethodController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -35,17 +38,17 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     final routes = snapshot.data!;
-                    return DropdownButtonFormField<RouteModel>(
-                      value: _selectedRoute,
+                    return DropdownButtonFormField<String>(
+                      value: _selectedRouteId,
                       items: routes.map((route) {
-                        return DropdownMenuItem<RouteModel>(
-                          value: route,
+                        return DropdownMenuItem<String>(
+                          value: route.id,
                           child: Text('${route.origin} - ${route.destination}'),
                         );
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedRoute = value;
+                          _selectedRouteId = value;
                         });
                       },
                       validator: (value) {
@@ -89,6 +92,7 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
               ),
               SizedBox(height: 16.0),
               TextFormField(
+                controller: _customerNameController,
                 decoration: InputDecoration(
                   labelText: 'Nombre del cliente',
                 ),
@@ -101,6 +105,7 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
               ),
               SizedBox(height: 16.0),
               TextFormField(
+                controller: _customerEmailController,
                 decoration: InputDecoration(
                   labelText: 'Correo electrónico del cliente',
                 ),
@@ -113,6 +118,7 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
               ),
               SizedBox(height: 16.0),
               TextFormField(
+                controller: _paymentMethodController,
                 decoration: InputDecoration(
                   labelText: 'Método de pago utilizado',
                 ),
@@ -140,22 +146,26 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
   }
 
   void _addTicketSale() async {
-    if (_selectedRoute != null) {
-      final ticketSale = TicketSale(
-        id: '',
-        customerName: '',
-        customerEmail: '',
-        amount: _selectedRoute!.ticketPrice * _quantity,
-        quantity: _quantity,
-        paymentMethod: '',
-        saleDate: Timestamp.now(),
-        routeId: _selectedRoute!.id,
-        ticketPrice: _selectedRoute!.ticketPrice,
-      );
+    if (_selectedRouteId != null) {
+      final route = await _controller.getRouteById(_selectedRouteId!);
 
-      await _controller.addTicketSale(ticketSale, _selectedRoute!, _quantity);
+      if (route != null) {
+        final ticketSale = TicketSale(
+          id: '',
+          customerName: _customerNameController.text,
+          customerEmail: _customerEmailController.text,
+          amount: route.ticketPrice * _quantity,
+          quantity: _quantity,
+          paymentMethod: _paymentMethodController.text,
+          saleDate: Timestamp.now(),
+          routeId: route.id,
+          ticketPrice: route.ticketPrice,
+        );
 
-      Navigator.of(context).pop();
+        await _controller.addTicketSale(ticketSale, route, _quantity);
+
+        Navigator.of(context).pop();
+      }
     }
   }
 }
