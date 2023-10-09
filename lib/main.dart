@@ -33,20 +33,38 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Transporte progreso del Choco LTDA.',
       theme: ThemeData(
-        primaryColor: Color(0xFF3F51B5), // Color primario
+        primaryColor: Colors.black, // Color primario
         fontFamily: 'Roboto', // Fuente de texto predeterminada
         appBarTheme: AppBarTheme(
-          backgroundColor: Color(0xFF3F51B5), // Color de fondo del AppBar
+          backgroundColor: Colors.black, // Color de fondo del AppBar
         ),
         textTheme: TextTheme(
           headline6: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           subtitle1: TextStyle(fontSize: 16),
           button: TextStyle(fontSize: 18, color: Colors.white),
+          bodyText1: TextStyle(fontSize: 18, color: Colors.black),
         ),
         buttonTheme: ButtonThemeData(
           buttonColor: Color(0xFFFFC107), // Color de fondo de botones
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(),
+          labelStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 18.0,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.black,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.black,
+            ),
           ),
         ),
       ),

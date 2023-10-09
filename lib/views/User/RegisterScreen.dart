@@ -8,24 +8,24 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final UserController _userController = UserController();
   String? _errorMessage; // Variable para almacenar el mensaje de error
 
   Future<void> _register() async {
+    final String fullName = _fullNameController.text;
     final String email = _emailController.text;
     final String password = _passwordController.text;
-    final String fullName = _fullNameController.text;
     final String phoneNumber = _phoneNumberController.text;
 
     final UserModel? user = await _userController.registerUser(
       context,
+      fullName,
       email,
       password,
-      fullName,
       phoneNumber,
     );
 
@@ -44,47 +44,166 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Registrarse'),
+        title: Text(
+          'Transprogreso Choco',
+          style: TextStyle(
+            fontSize: 24.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.black,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _fullNameController,
-              decoration: InputDecoration(labelText: 'Nombre Completo'),
-            ),
-            SizedBox(height: 16.0),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Correo Electrónico'),
-            ),
-            SizedBox(height: 16.0),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: InputDecoration(labelText: 'Contraseña'),
-            ),
-            SizedBox(height: 16.0),
-            TextField(
-              controller: _phoneNumberController,
-              decoration: InputDecoration(labelText: 'Número de Teléfono'),
-            ),
-            SizedBox(height: 32.0),
-            ElevatedButton(
-              onPressed: _register,
-              child: Text('Registrarse'),
-            ),
-            if (_errorMessage != null) // Muestra el mensaje de error si existe
-              Text(
-                _errorMessage!,
-                style: TextStyle(
-                  color: Colors.red,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 150.0,
+                  height: 150.0,
                 ),
-              ),
-          ],
+                const SizedBox(height: 32.0),
+                TextFormField(
+                  controller: _fullNameController,
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    color: Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Nombre Completo',
+                    labelStyle: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.0,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 16.0,
+                      horizontal: 16.0,
+                    ),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                TextFormField(
+                  controller: _emailController,
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    color: Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Correo Electrónico',
+                    labelStyle: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.0,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 16.0,
+                      horizontal: 16.0,
+                    ),
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    color: Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Contraseña',
+                    labelStyle: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.0,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 16.0,
+                      horizontal: 16.0,
+                    ),
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                TextFormField(
+                  controller: _phoneNumberController,
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    color: Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Número de Teléfono',
+                    labelStyle: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.0,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 16.0,
+                      horizontal: 16.0,
+                    ),
+                    prefixIcon: Icon(Icons.phone),
+                  ),
+                ),
+                const SizedBox(height: 32.0),
+                ElevatedButton(
+                  onPressed: _register,
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.black,
+                    padding: EdgeInsets.symmetric(
+                      vertical: 12.0,
+                      horizontal: 32.0,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ),
+                  child: Text(
+                    'Registrarse',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                    ),
+                  ),
+                ),
+                if (_errorMessage != null)
+                  Text(
+                    _errorMessage!,
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 18.0,
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );

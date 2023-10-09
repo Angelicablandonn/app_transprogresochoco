@@ -12,7 +12,7 @@ class Sidebar extends StatelessWidget {
               style: TextStyle(fontSize: 24, color: Colors.white),
             ),
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color: Colors.black,
             ),
           ),
           // Opción "Usuarios"
