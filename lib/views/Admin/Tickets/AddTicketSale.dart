@@ -1,8 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:app_transprogresochoco/controllers/AdminController.dart';
 import 'package:app_transprogresochoco/models/RouteModel.dart';
 import 'package:app_transprogresochoco/models/TicketSale.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddTicketSaleView extends StatefulWidget {
   @override
@@ -12,7 +12,6 @@ class AddTicketSaleView extends StatefulWidget {
 class _AddTicketSaleViewState extends State<AddTicketSaleView> {
   final _formKey = GlobalKey<FormState>();
   final _controller = AdminController();
-
   String? _selectedRouteId;
   int _quantity = 1;
   TextEditingController _customerNameController = TextEditingController();
@@ -23,7 +22,7 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Agregar venta de tiquete'),
+        title: Text('Agregar Venta de Tiquete'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -32,116 +31,114 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Seleccione la ruta:'),
-              FutureBuilder<List<RouteModel>>(
-                future: _controller.getRoutes(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    final routes = snapshot.data!;
-                    return DropdownButtonFormField<String>(
-                      value: _selectedRouteId,
-                      items: routes.map((route) {
-                        return DropdownMenuItem<String>(
-                          value: route.id,
-                          child: Text('${route.origin} - ${route.destination}'),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedRouteId = value;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Seleccione una ruta';
-                        }
-                        return null;
-                      },
-                    );
-                  } else if (snapshot.hasError) {
-                    return Text('Error al cargar las rutas');
-                  } else {
-                    return CircularProgressIndicator();
-                  }
-                },
-              ),
+              _buildDropDownRoute(),
               SizedBox(height: 16.0),
-              Text('Cantidad de tiquetes:'),
-              Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.remove),
-                    onPressed: () {
-                      setState(() {
-                        if (_quantity > 1) {
-                          _quantity--;
-                        }
-                      });
-                    },
-                  ),
-                  Text('$_quantity'),
-                  IconButton(
-                    icon: Icon(Icons.add),
-                    onPressed: () {
-                      setState(() {
-                        _quantity++;
-                      });
-                    },
-                  ),
-                ],
-              ),
+              _buildQuantitySelector(),
               SizedBox(height: 16.0),
-              TextFormField(
-                controller: _customerNameController,
-                decoration: InputDecoration(
-                  labelText: 'Nombre del cliente',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Ingrese el nombre del cliente';
-                  }
-                  return null;
-                },
-              ),
+              _buildTextFormField(
+                  _customerNameController, 'Nombre del Cliente', Icons.person),
               SizedBox(height: 16.0),
-              TextFormField(
-                controller: _customerEmailController,
-                decoration: InputDecoration(
-                  labelText: 'Correo electrónico del cliente',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Ingrese el correo electrónico del cliente';
-                  }
-                  return null;
-                },
-              ),
+              _buildTextFormField(
+                  _customerEmailController, 'Correo Electrónico', Icons.email),
               SizedBox(height: 16.0),
-              TextFormField(
-                controller: _paymentMethodController,
-                decoration: InputDecoration(
-                  labelText: 'Método de pago utilizado',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Ingrese el método de pago utilizado';
-                  }
-                  return null;
-                },
-              ),
+              _buildTextFormField(
+                  _paymentMethodController, 'Método de Pago', Icons.payment),
               SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _addTicketSale();
-                  }
-                },
-                child: Text('Agregar venta'),
-              ),
+              _buildAddTicketButton(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDropDownRoute() {
+    return FutureBuilder<List<RouteModel>>(
+      future: _controller.getRoutes(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Text('Error al cargar las rutas');
+        }
+        final routes = snapshot.data ?? [];
+        return DropdownButtonFormField<String>(
+          value: _selectedRouteId,
+          items: routes.map((route) {
+            return DropdownMenuItem<String>(
+              value: route.id,
+              child: Text('${route.origin} - ${route.destination}'),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedRouteId = value;
+            });
+          },
+          validator: (value) {
+            if (value == null) {
+              return 'Seleccione una ruta';
+            }
+            return null;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildQuantitySelector() {
+    return Row(
+      children: [
+        IconButton(
+          icon: Icon(Icons.remove),
+          onPressed: () {
+            setState(() {
+              if (_quantity > 1) {
+                _quantity--;
+              }
+            });
+          },
+        ),
+        Text('$_quantity', style: TextStyle(fontSize: 20)),
+        IconButton(
+          icon: Icon(Icons.add),
+          onPressed: () {
+            setState(() {
+              _quantity++;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextFormField(
+      TextEditingController controller, String labelText, IconData icon) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: labelText,
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Ingrese el $labelText';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildAddTicketButton() {
+    return ElevatedButton(
+      onPressed: () {
+        if (_formKey.currentState!.validate()) {
+          _addTicketSale();
+        }
+      },
+      child: Text('Agregar Venta', style: TextStyle(fontSize: 18)),
     );
   }
 

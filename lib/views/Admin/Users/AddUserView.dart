@@ -17,8 +17,7 @@ class _AddUserViewState extends State<AddUserView> {
   final TextEditingController _passwordController = TextEditingController();
   final AdminController _adminController = AdminController();
 
-  File?
-      _profilePicture; // Variable para almacenar la foto de perfil seleccionada
+  File? _profilePicture;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +34,10 @@ class _AddUserViewState extends State<AddUserView> {
             children: [
               TextFormField(
                 controller: _fullNameController,
-                decoration: InputDecoration(labelText: 'Nombre Completo'),
+                decoration: InputDecoration(
+                  labelText: 'Nombre Completo',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, ingresa un nombre';
@@ -43,9 +45,13 @@ class _AddUserViewState extends State<AddUserView> {
                   return null;
                 },
               ),
+              SizedBox(height: 16.0),
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: 'Correo Electrónico'),
+                decoration: InputDecoration(
+                  labelText: 'Correo Electrónico',
+                  border: OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -54,9 +60,13 @@ class _AddUserViewState extends State<AddUserView> {
                   return null;
                 },
               ),
+              SizedBox(height: 16.0),
               TextFormField(
                 controller: _phoneNumberController,
-                decoration: InputDecoration(labelText: 'Número de Teléfono'),
+                decoration: InputDecoration(
+                  labelText: 'Número de Teléfono',
+                  border: OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -65,17 +75,24 @@ class _AddUserViewState extends State<AddUserView> {
                   return null;
                 },
               ),
+              SizedBox(height: 16.0),
               ElevatedButton(
-                onPressed:
-                    _selectProfilePicture, // Agregar la llamada a _selectProfilePicture
-                child: Text('Seleccionar Foto de Perfil'),
+                onPressed: _selectProfilePicture,
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.blue,
+                ),
+                child: Text(
+                  'Seleccionar Foto de Perfil',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
-              if (_profilePicture !=
-                  null) // Mostrar la imagen seleccionada si existe
-                Image.file(_profilePicture!),
+              if (_profilePicture != null) Image.file(_profilePicture!),
               TextFormField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Contraseña'),
+                decoration: InputDecoration(
+                  labelText: 'Contraseña',
+                  border: OutlineInputBorder(),
+                ),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -95,13 +112,19 @@ class _AddUserViewState extends State<AddUserView> {
                       fullName: _fullNameController.text,
                       email: _emailController.text,
                       phoneNumber: _phoneNumberController.text,
-                      profilePicture: '', // No se usa aquí
+                      profilePicture: '',
                       password: _passwordController.text,
                     );
                     _showPasswordDialog(newUser);
                   }
                 },
-                child: Text('Agregar Usuario'),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.green,
+                ),
+                child: Text(
+                  'Agregar Usuario',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -110,7 +133,6 @@ class _AddUserViewState extends State<AddUserView> {
     );
   }
 
-  // Método para seleccionar la foto de perfil
   void _selectProfilePicture() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -129,7 +151,10 @@ class _AddUserViewState extends State<AddUserView> {
           title: Text('Establecer Contraseña'),
           content: TextFormField(
             controller: _passwordController,
-            decoration: InputDecoration(labelText: 'Contraseña'),
+            decoration: InputDecoration(
+              labelText: 'Contraseña',
+              border: OutlineInputBorder(),
+            ),
             obscureText: true,
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -149,7 +174,7 @@ class _AddUserViewState extends State<AddUserView> {
               child: Text('Guardar'),
               onPressed: () {
                 final String password = _passwordController.text;
-                newUser.profilePicture = ''; // No se usa aquí
+                newUser.profilePicture = '';
                 _adminController.addUserWithPassword(
                     newUser, password, context);
                 Navigator.of(context).pop();

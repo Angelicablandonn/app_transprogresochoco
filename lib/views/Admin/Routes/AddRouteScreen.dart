@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:app_transprogresochoco/controllers/AdminController.dart';
 import 'package:app_transprogresochoco/models/RouteModel.dart';
 import 'package:flutter/material.dart';
@@ -15,11 +14,9 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
   final TextEditingController _originController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final TextEditingController _availableSeatsController =
-      TextEditingController(); // Agregado
-  final TextEditingController _busTypeController =
-      TextEditingController(); // Agregado
-  final TextEditingController _descriptionController =
-      TextEditingController(); // Agregado
+      TextEditingController();
+  final TextEditingController _busTypeController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   DateTime _departureDateTime = DateTime.now();
   DateTime selectDateTime = DateTime.now();
   final TextEditingController _ticketPriceController = TextEditingController();
@@ -71,9 +68,9 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
       destination: _destinationController.text,
       departureTime: _departureDateTime,
       ticketPrice: double.parse(_ticketPriceController.text),
-      availableSeats: 0,
-      busType: '',
-      description: '',
+      availableSeats: int.parse(_availableSeatsController.text),
+      busType: _busTypeController.text,
+      description: _descriptionController.text,
       imageUrl: '', // Debes actualizar esta URL con la URL de la imagen cargada
     );
 
@@ -103,59 +100,16 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Nombre de la Ruta'),
-              ),
-              TextFormField(
-                controller: _originController,
-                decoration: InputDecoration(labelText: 'Origen'),
-              ),
-              TextFormField(
-                controller: _destinationController,
-                decoration: InputDecoration(labelText: 'Destino'),
-              ),
-              TextFormField(
-                controller: _availableSeatsController,
-                decoration: InputDecoration(labelText: 'Asientos Disponibles'),
-              ),
-              TextFormField(
-                controller: _busTypeController,
-                decoration: InputDecoration(labelText: 'Tipo de Vehículo'),
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration:
-                    InputDecoration(labelText: 'Descripción de la Ruta'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _selectDateTime(context);
-                },
-                child: Text('Seleccionar Fecha y Hora de Salida'),
-              ),
-              Text(
-                'Fecha y Hora de Salida: ${_departureDateTime.toLocal()}'
-                    .split('.')[0],
-              ),
-              TextFormField(
-                controller: _ticketPriceController,
-                decoration: InputDecoration(labelText: 'Precio del Tiquete'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _uploadImage();
-                },
-                child: Text('Seleccionar Imagen'),
-              ),
-              if (_imageFile != null)
-                Image.file(
-                  _imageFile!,
-                  height: 100,
-                  width: 100,
-                )
-              else
-                Text('No has seleccionado una imagen'),
+              _buildTextField(_nameController, 'Nombre de la Ruta'),
+              _buildTextField(_originController, 'Origen'),
+              _buildTextField(_destinationController, 'Destino'),
+              _buildTextField(
+                  _availableSeatsController, 'Asientos Disponibles'),
+              _buildTextField(_busTypeController, 'Tipo de Vehículo'),
+              _buildTextField(_descriptionController, 'Descripción de la Ruta'),
+              _buildDateTimePicker(),
+              _buildTextField(_ticketPriceController, 'Precio del Tiquete'),
+              _buildImageUploader(),
               SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: _addRoute,
@@ -165,6 +119,59 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateTimePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ElevatedButton(
+          onPressed: () {
+            _selectDateTime(context);
+          },
+          child: Text('Seleccionar Fecha y Hora de Salida'),
+        ),
+        Text(
+          'Fecha y Hora de Salida: ${_departureDateTime.toLocal()}'
+              .split('.')[0],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageUploader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ElevatedButton(
+          onPressed: () {
+            _uploadImage();
+          },
+          child: Text('Seleccionar Imagen'),
+        ),
+        if (_imageFile != null)
+          Image.file(
+            _imageFile!,
+            height: 100,
+            width: 100,
+          )
+        else
+          Text('No has seleccionado una imagen'),
+      ],
     );
   }
 }

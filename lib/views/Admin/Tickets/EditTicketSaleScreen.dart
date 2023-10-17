@@ -12,9 +12,8 @@ class EditTicketSaleScreen extends StatefulWidget {
 }
 
 class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
-  final _controller = AdminController();
-  final _formKey = GlobalKey<FormState>();
-
+  final AdminController _controller = AdminController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String _customerName = '';
   String _customerEmail = '';
   String _paymentMethod = '';
@@ -38,12 +37,13 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
               TextFormField(
                 initialValue: _customerName,
                 decoration: InputDecoration(
                   labelText: 'Nombre del Cliente',
+                  border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -62,6 +62,7 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
                 initialValue: _customerEmail,
                 decoration: InputDecoration(
                   labelText: 'Correo Electrónico del Cliente',
+                  border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -80,6 +81,7 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
                 initialValue: _paymentMethod,
                 decoration: InputDecoration(
                   labelText: 'Método de Pago',
+                  border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -93,7 +95,7 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
                   });
                 },
               ),
-              SizedBox(height: 16.0),
+              SizedBox(height: 24.0),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
@@ -101,7 +103,16 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
                     _updateTicketSale();
                   }
                 },
-                child: Text('Guardar Cambios'),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.blue, // Color del botón
+                ),
+                child: Text(
+                  'Guardar Cambios',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18.0,
+                  ),
+                ),
               ),
             ],
           ),

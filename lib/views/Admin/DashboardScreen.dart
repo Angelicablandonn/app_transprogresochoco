@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:app_transprogresochoco/controllers/AdminController.dart';
 import 'package:app_transprogresochoco/views/Admin/Includes/header.dart';
 import 'package:app_transprogresochoco/views/Admin/Includes/sidebar.dart';
-import 'package:app_transprogresochoco/views/Admin/Includes/footer.dart';
 import 'package:app_transprogresochoco/models/RouteModel.dart';
 import 'package:app_transprogresochoco/models/TicketSale.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class AdminDashboard extends StatefulWidget {
   @override
@@ -44,111 +44,184 @@ class _AdminDashboardState extends State<AdminDashboard> {
       drawer: Sidebar(),
       body: Column(
         children: [
-          Container(
-            padding: EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'Panel de administrador',
-                  style: TextStyle(
-                    fontSize: 24.0,
-                    fontWeight: FontWeight.bold,
+          _buildSection(
+            title: 'Acciones',
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildDashboardItem(
+                    icon: Icons.person_add,
+                    label: 'Agregar Usuario',
+                    value: '$_totalUsers',
+                  ),
+                  _buildDashboardItem(
+                    icon: Icons.add_location,
+                    label: 'Agregar Ruta',
+                    value: '$_totalRoutes',
+                  ),
+                  _buildDashboardItem(
+                    icon: Icons.add_shopping_cart,
+                    label: 'Agregar Venta',
+                    value: '$_totalTicketSales',
+                  ),
+                ],
+              ),
+            ],
+          ),
+          _buildSection(
+            title: 'Estadísticas',
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildBarChart(
+                    title: 'Total Usuarios',
+                    value: _totalUsers,
+                    color: Colors.blue,
+                  ),
+                  _buildBarChart(
+                    title: 'Total Rutas',
+                    value: _totalRoutes,
+                    color: Colors.green,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          _buildSection(
+            title: 'Ventas',
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: PieChart(
+                    PieChartData(
+                      sections: [
+                        PieChartSectionData(
+                          value: 20,
+                          title: '20%',
+                          color: Colors.blue,
+                        ),
+                        PieChartSectionData(
+                          value: 30,
+                          title: '30%',
+                          color: Colors.green,
+                        ),
+                        PieChartSectionData(
+                          value: 50,
+                          title: '50%',
+                          color: Colors.orange,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Column(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.person_add),
-                          onPressed: () {
-                            // Lógica para agregar un usuario
-                          },
-                        ),
-                        SizedBox(height: 10),
-                        Text('Agregar Usuario', style: TextStyle(fontSize: 18)),
-                        SizedBox(height: 10),
-                        IconButton(
-                          icon: Icon(Icons.list),
-                          onPressed: () {
-                            // Lógica para listar usuarios
-                          },
-                        ),
-                        SizedBox(height: 10),
-                        Text('Listar Usuarios', style: TextStyle(fontSize: 18)),
-                        SizedBox(height: 10),
-                        Text('$_totalUsers', style: TextStyle(fontSize: 24)),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.add_location),
-                          onPressed: () {
-                            // Lógica para agregar una ruta
-                          },
-                        ),
-                        SizedBox(height: 10),
-                        Text('Agregar Ruta', style: TextStyle(fontSize: 18)),
-                        SizedBox(height: 10),
-                        IconButton(
-                          icon: Icon(Icons.list),
-                          onPressed: () {
-                            // Lógica para listar rutas
-                          },
-                        ),
-                        SizedBox(height: 10),
-                        Text('Listar Rutas', style: TextStyle(fontSize: 18)),
-                        SizedBox(height: 10),
-                        Text('$_totalRoutes', style: TextStyle(fontSize: 24)),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.add_shopping_cart),
-                          onPressed: () {
-                            // Lógica para agregar una venta de tiquete
-                          },
-                        ),
-                        SizedBox(height: 10),
-                        Text('Agregar Venta', style: TextStyle(fontSize: 18)),
-                        SizedBox(height: 10),
-                        IconButton(
-                          icon: Icon(Icons.list),
-                          onPressed: () {
-                            // Lógica para listar ventas de tiquetes
-                          },
-                        ),
-                        SizedBox(height: 10),
-                        Text('Listar Ventas', style: TextStyle(fontSize: 18)),
-                        SizedBox(height: 10),
-                        Text('$_totalTicketSales',
-                            style: TextStyle(fontSize: 24)),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(
+      {required String title, required List<Widget> children}) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          Expanded(
-            child: Container(
-              color: Colors.black,
-              child: Footer(),
+        ),
+        ...children,
+      ],
+    );
+  }
+
+  Widget _buildDashboardItem(
+      {required IconData icon, required String label, required String value}) {
+    return Column(
+      children: [
+        IconButton(
+          icon: Icon(icon),
+          onPressed: () {
+            // Agregar lógica correspondiente
+          },
+        ),
+        const SizedBox(height: 10),
+        Text(
+          label,
+          style: TextStyle(fontSize: 18),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          value,
+          style: TextStyle(fontSize: 24),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBarChart(
+      {required String title, required int value, required Color color}) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: 100,
+            height: 100,
+            child: BarChart(
+              BarChartData(
+                titlesData: FlTitlesData(
+                  leftTitles: SideTitles(
+                    showTitles: true,
+                    getTextStyles: (context, value) => const TextStyle(
+                      color: const Color(0xff7589a2),
+                    ),
+                    margin: 10,
+                  ),
+                  topTitles: SideTitles(showTitles: false),
+                  rightTitles: SideTitles(showTitles: false),
+                  bottomTitles: SideTitles(
+                    showTitles: true,
+                    getTextStyles: (context, value) => const TextStyle(
+                      color: const Color(0xff7589a2),
+                    ),
+                    margin: 10,
+                  ),
+                ),
+                borderData: FlBorderData(
+                  show: false,
+                ),
+                barGroups: [
+                  BarChartGroupData(
+                    x: 0,
+                    barRods: [
+                      BarChartRodData(
+                        y: value.toDouble(),
+                        colors: [color],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],

@@ -4,7 +4,7 @@ class Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(50.0),
+      height: 30.0, // Ajusta la altura
       color: Colors.black,
       child: Center(
         child: Text(

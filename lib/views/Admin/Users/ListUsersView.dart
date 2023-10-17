@@ -1,3 +1,4 @@
+import 'package:app_transprogresochoco/views/Admin/Users/EditUserScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:app_transprogresochoco/controllers/AdminController.dart';
 import 'package:app_transprogresochoco/models/UserModel.dart';
@@ -48,6 +49,55 @@ class _ListUsersViewState extends State<ListUsersView> {
           duration: Duration(seconds: 3),
         ),
       );
+    }
+  }
+
+  void _editUser(UserModel user) {
+    // Obtén el UID del usuario
+    String uid = user.uid;
+    // Puedes abrir una nueva pantalla de edición de usuario
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditUserScreen(uid: uid, user: user),
+      ),
+    ).then((result) {
+      if (result == true) {
+        // Recargar la lista de usuarios después de la edición
+        _loadUserList();
+      }
+    });
+  }
+
+  void _deleteUser(String uid) async {
+    // Muestra un diálogo de confirmación antes de eliminar al usuario
+    bool confirmDelete = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Confirmar Eliminación'),
+        content: Text('¿Estás seguro de que deseas eliminar este usuario?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false); // No confirmar
+            },
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(true); // Confirmar
+            },
+            child: Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmDelete == true) {
+      // Elimina al usuario utilizando el controlador
+      await _adminController.deleteUser(uid);
+      // Recarga la lista de usuarios después de la eliminación
+      _loadUserList();
     }
   }
 
@@ -114,6 +164,24 @@ class _ListUsersViewState extends State<ListUsersView> {
                           return ListTile(
                             title: Text(user.fullName),
                             subtitle: Text(user.email),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.edit),
+                                  onPressed: () {
+                                    _editUser(user); // Editar el usuario
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete),
+                                  onPressed: () {
+                                    _deleteUser(
+                                        user.uid); // Eliminar el usuario
+                                  },
+                                ),
+                              ],
+                            ),
                           );
                         },
                       );

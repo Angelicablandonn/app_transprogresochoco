@@ -22,7 +22,7 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
   final TextEditingController _busTypeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _imageUrlController = TextEditingController();
-  DateTime _departureDateTime = DateTime.now(); // Agregado
+  DateTime _departureDateTime = DateTime.now();
 
   @override
   void initState() {
@@ -31,10 +31,8 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
   }
 
   Future<void> _loadRouteDetails() async {
-    // Obtén los detalles de la ruta a editar usando el ID
     final route = await _adminController.getRouteDetails(widget.routeId);
 
-    // Actualiza los controladores de texto con los detalles de la ruta
     setState(() {
       _nameController.text = route.name;
       _originController.text = route.origin;
@@ -44,14 +42,14 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
       _busTypeController.text = route.busType;
       _descriptionController.text = route.description;
       _imageUrlController.text = route.imageUrl;
-      _departureDateTime = route.departureTime; // Actualizado
+      _departureDateTime = route.departureTime;
     });
   }
 
   Future<void> _selectDateTime(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _departureDateTime, // Usar la fecha actual de la ruta
+      initialDate: _departureDateTime,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
@@ -86,49 +84,16 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Nombre de la Ruta'),
-              ),
-              TextFormField(
-                controller: _originController,
-                decoration: InputDecoration(labelText: 'Origen'),
-              ),
-              TextFormField(
-                controller: _destinationController,
-                decoration: InputDecoration(labelText: 'Destino'),
-              ),
-              TextFormField(
-                controller: _ticketPriceController,
-                decoration: InputDecoration(labelText: 'Precio del Tiquete'),
-              ),
-              TextFormField(
-                controller: _availableSeatsController,
-                decoration: InputDecoration(labelText: 'Asientos Disponibles'),
-              ),
-              TextFormField(
-                controller: _busTypeController,
-                decoration: InputDecoration(labelText: 'Tipo de Bus'),
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Descripción'),
-              ),
-              TextFormField(
-                controller: _imageUrlController,
-                decoration: InputDecoration(labelText: 'URL de la Imagen'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _selectDateTime(context);
-                },
-                child: Text('Seleccionar Fecha y Hora de Salida'),
-              ),
-              Text(
-                'Fecha y Hora de Salida: ${_departureDateTime.toLocal()}'
-                    .split('.')[0],
-              ),
-              SizedBox(height: 16.0),
+              _buildTextField(_nameController, 'Nombre de la Ruta'),
+              _buildTextField(_originController, 'Origen'),
+              _buildTextField(_destinationController, 'Destino'),
+              _buildTextField(_ticketPriceController, 'Precio del Tiquete'),
+              _buildTextField(
+                  _availableSeatsController, 'Asientos Disponibles'),
+              _buildTextField(_busTypeController, 'Tipo de Bus'),
+              _buildTextField(_descriptionController, 'Descripción'),
+              _buildTextField(_imageUrlController, 'URL de la Imagen'),
+              _buildDateTimePicker(),
               ElevatedButton(
                 onPressed: () async {
                   final updatedRoute = RouteModel(
@@ -136,7 +101,7 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
                     name: _nameController.text,
                     origin: _originController.text,
                     destination: _destinationController.text,
-                    departureTime: _departureDateTime, // Actualizado
+                    departureTime: _departureDateTime,
                     ticketPrice: double.parse(_ticketPriceController.text),
                     availableSeats: int.parse(_availableSeatsController.text),
                     busType: _busTypeController.text,
@@ -144,7 +109,7 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
                     imageUrl: _imageUrlController.text,
                   );
                   await _adminController.updateRoute(updatedRoute);
-                  Navigator.of(context).pop(); // Vuelve a la pantalla anterior
+                  Navigator.of(context).pop();
                 },
                 child: Text('Guardar Cambios'),
               ),
@@ -152,6 +117,37 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateTimePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ElevatedButton(
+          onPressed: () {
+            _selectDateTime(context);
+          },
+          child: Text('Seleccionar Fecha y Hora de Salida'),
+        ),
+        Text(
+          'Fecha y Hora de Salida: ${_departureDateTime.toLocal()}'
+              .split('.')[0],
+        ),
+      ],
     );
   }
 }
