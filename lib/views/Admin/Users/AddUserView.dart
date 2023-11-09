@@ -19,115 +19,183 @@ class _AddUserViewState extends State<AddUserView> {
 
   File? _profilePicture;
 
+  bool _showPassword = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Agregar Usuario'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                controller: _fullNameController,
-                decoration: InputDecoration(
-                  labelText: 'Nombre Completo',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, ingresa un nombre';
-                  }
-                  return null;
-                },
+              _buildUserIcon(),
+              SizedBox(height: 16.0),
+              _buildTextField(
+                _fullNameController,
+                'Nombre Completo',
+                Icons.person,
               ),
               SizedBox(height: 16.0),
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Correo Electrónico',
-                  border: OutlineInputBorder(),
-                ),
+              _buildTextField(
+                _emailController,
+                'Correo Electrónico',
+                Icons.email,
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, ingresa un correo electrónico';
-                  }
-                  return null;
-                },
               ),
               SizedBox(height: 16.0),
-              TextFormField(
-                controller: _phoneNumberController,
-                decoration: InputDecoration(
-                  labelText: 'Número de Teléfono',
-                  border: OutlineInputBorder(),
-                ),
+              _buildTextField(
+                _phoneNumberController,
+                'Número de Teléfono',
+                Icons.phone,
                 keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, ingresa un número de teléfono';
-                  }
-                  return null;
-                },
               ),
               SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: _selectProfilePicture,
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.blue,
-                ),
-                child: Text(
-                  'Seleccionar Foto de Perfil',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              if (_profilePicture != null) Image.file(_profilePicture!),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Contraseña',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, ingresa una contraseña';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    final String newUid =
-                        DateTime.now().millisecondsSinceEpoch.toString();
-                    final newUser = UserModel(
-                      uid: newUid,
-                      fullName: _fullNameController.text,
-                      email: _emailController.text,
-                      phoneNumber: _phoneNumberController.text,
-                      profilePicture: '',
-                      password: _passwordController.text,
-                    );
-                    _showPasswordDialog(newUser);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.green,
-                ),
-                child: Text(
-                  'Agregar Usuario',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
+              _buildPasswordField(),
+              SizedBox(height: 24.0),
+              _buildAddUserButton(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserIcon() {
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10.0),
+            color: Colors.black.withOpacity(0.5),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.black,
+            radius: 64,
+            child: Icon(
+              _profilePicture == null ? Icons.person : null,
+              size: 64,
+              color: Colors.white,
+            ),
+            backgroundImage:
+                _profilePicture != null ? FileImage(_profilePicture!) : null,
+          ),
+        ),
+        SizedBox(height: 16.0),
+        Container(
+          margin: EdgeInsets.all(10.0),
+          child: ElevatedButton.icon(
+            onPressed: _selectProfilePicture,
+            style: ElevatedButton.styleFrom(
+              primary: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ),
+            icon: Icon(Icons.camera_alt, color: Colors.white),
+            label: Text(
+              'Seleccionar Foto de Perfil',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: Colors.black),
+          labelStyle: TextStyle(color: Colors.black),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+        ),
+        keyboardType: keyboardType,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Por favor, ingresa un valor válido';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: TextFormField(
+        controller: _passwordController,
+        decoration: InputDecoration(
+          labelText: 'Contraseña',
+          prefixIcon: Icon(Icons.lock, color: Colors.black),
+          labelStyle: TextStyle(color: Colors.black),
+          suffixIcon: IconButton(
+            icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+            onPressed: () {
+              setState(() {
+                _showPassword = !_showPassword;
+              });
+            },
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+        ),
+        obscureText: !_showPassword,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Por favor, ingresa una contraseña válida';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+  Widget _buildAddUserButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: ElevatedButton(
+        onPressed: () {
+          if (_formKey.currentState!.validate()) {
+            final String newUid =
+                DateTime.now().millisecondsSinceEpoch.toString();
+            final newUser = UserModel(
+              uid: newUid,
+              fullName: _fullNameController.text,
+              email: _emailController.text,
+              phoneNumber: _phoneNumberController.text,
+              profilePicture: _profilePicture?.path ?? '',
+              password: _passwordController.text,
+            );
+            _showPasswordDialog(newUser);
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          primary: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+        ),
+        child: Text(
+          'Guardar Usuario',
+          style: TextStyle(color: Colors.white),
         ),
       ),
     );
@@ -149,20 +217,7 @@ class _AddUserViewState extends State<AddUserView> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Establecer Contraseña'),
-          content: TextFormField(
-            controller: _passwordController,
-            decoration: InputDecoration(
-              labelText: 'Contraseña',
-              border: OutlineInputBorder(),
-            ),
-            obscureText: true,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor, ingresa una contraseña';
-              }
-              return null;
-            },
-          ),
+          content: _buildPasswordField(),
           actions: <Widget>[
             TextButton(
               child: Text('Cancelar'),
@@ -174,7 +229,7 @@ class _AddUserViewState extends State<AddUserView> {
               child: Text('Guardar'),
               onPressed: () {
                 final String password = _passwordController.text;
-                newUser.profilePicture = '';
+                newUser.profilePicture = _profilePicture?.path ?? '';
                 _adminController.addUserWithPassword(
                     newUser, password, context);
                 Navigator.of(context).pop();

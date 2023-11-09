@@ -100,15 +100,20 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _buildTextField(_nameController, 'Nombre de la Ruta'),
-              _buildTextField(_originController, 'Origen'),
-              _buildTextField(_destinationController, 'Destino'),
               _buildTextField(
-                  _availableSeatsController, 'Asientos Disponibles'),
-              _buildTextField(_busTypeController, 'Tipo de Vehículo'),
-              _buildTextField(_descriptionController, 'Descripción de la Ruta'),
+                  _nameController, 'Nombre de la Ruta', Icons.directions_bus),
+              _buildTextField(_originController, 'Origen', Icons.location_on),
+              _buildTextField(
+                  _destinationController, 'Destino', Icons.location_on),
+              _buildTextField(_availableSeatsController, 'Asientos Disponibles',
+                  Icons.event_seat),
+              _buildTextField(
+                  _busTypeController, 'Tipo de Vehículo', Icons.directions_car),
+              _buildTextField(_descriptionController, 'Descripción de la Ruta',
+                  Icons.description),
               _buildDateTimePicker(),
-              _buildTextField(_ticketPriceController, 'Precio del Tiquete'),
+              _buildTextField(_ticketPriceController, 'Precio del Tiquete',
+                  Icons.attach_money),
               _buildImageUploader(),
               SizedBox(height: 16.0),
               ElevatedButton(
@@ -122,7 +127,8 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
@@ -130,6 +136,7 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(),
+          prefixIcon: Icon(icon),
         ),
       ),
     );

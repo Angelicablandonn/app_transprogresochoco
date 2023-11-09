@@ -11,7 +11,7 @@ import 'package:app_transprogresochoco/models/UserModel.dart';
 import 'views/Admin/Routes/EditRouteScreen.dart';
 import 'views/Admin/Routes/AddRouteScreen.dart';
 import 'views/Admin/Routes/ListRoutesScreen.dart';
-
+import 'views/User/HomeScreen.dart';
 // Importa las vistas de ventas de tiquetes y sus respectivos editores y eliminadores aquí
 import 'package:app_transprogresochoco/views/Admin/Tickets/AddTicketSale.dart';
 import 'package:app_transprogresochoco/views/Admin/Tickets/EditTicketSaleScreen.dart';
@@ -33,19 +33,22 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Transporte progreso del Choco LTDA.',
       theme: ThemeData(
-        primaryColor: Colors.black, // Color primario
-        fontFamily: 'Roboto', // Fuente de texto predeterminada
+        primaryColor: Colors.black,
+        fontFamily: 'Roboto',
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.black, // Color de fondo del AppBar
+          backgroundColor: Colors.black,
         ),
         textTheme: TextTheme(
           headline6: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           subtitle1: TextStyle(fontSize: 16),
           button: TextStyle(fontSize: 18, color: Colors.white),
           bodyText1: TextStyle(fontSize: 18, color: Colors.black),
+        ).apply(
+          bodyColor: Colors.black,
+          displayColor: Colors.black,
         ),
         buttonTheme: ButtonThemeData(
-          buttonColor: Color(0xFFFFC107), // Color de fondo de botones
+          buttonColor: Color(0xFFFFC107),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),
@@ -68,23 +71,25 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: '/login', // Ruta inicial
+      initialRoute: '/login',
       routes: {
-        '/login': (context) => LoginScreen(), // Pantalla de inicio de sesión
+        '/home': (context) {
+          final arguments = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
+          final user = arguments['user'] as UserModel;
+          return HomeScreen(user: user);
+        },
+        '/login': (context) => LoginScreen(),
         '/dashboard': (context) => AdminDashboard(),
-        //users
-        '/list_users': (context) => ListUsersView(), // lista de usuarios
+        '/list_users': (context) => ListUsersView(),
         '/add_user': (context) => AddUserView(),
         '/edit_user': (context) {
-          // Obtener los argumentos de la ruta
           final arguments = ModalRoute.of(context)!.settings.arguments
               as Map<String, dynamic>;
           final uid = arguments['uid'] as String;
           final user = arguments['user'] as UserModel;
           return EditUserScreen(uid: uid, user: user);
         },
-
-        //rutas
         '/add_route': (context) => AddRouteScreen(),
         '/edit_route': (context) {
           final arguments = ModalRoute.of(context)!.settings.arguments
@@ -93,8 +98,6 @@ class MyApp extends StatelessWidget {
           return EditRouteScreen(routeId: routeId);
         },
         '/list_routes': (context) => ListRoutesScreen(),
-
-        // Rutas relacionadas con las ventas de tiquetes
         '/add_ticket_sale': (context) => AddTicketSaleView(),
         '/list_ticket_sales': (context) => TicketSalesListScreen(),
       },

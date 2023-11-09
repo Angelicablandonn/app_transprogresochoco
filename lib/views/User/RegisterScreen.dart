@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_transprogresochoco/controllers/UserController.dart';
 import 'package:app_transprogresochoco/models/UserModel.dart';
+import 'package:image_picker/image_picker.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -14,6 +15,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _phoneNumberController = TextEditingController();
   final UserController _userController = UserController();
   String? _errorMessage; // Variable para almacenar el mensaje de error
+  String?
+      _profilePicture; // Variable para almacenar la ruta de la foto de perfil
 
   Future<void> _register() async {
     final String fullName = _fullNameController.text;
@@ -21,22 +24,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final String password = _passwordController.text;
     final String phoneNumber = _phoneNumberController.text;
 
-    final UserModel? user = await _userController.registerUser(
-      context,
-      fullName,
-      email,
-      password,
-      phoneNumber,
+    // Verifica si _profilePicture tiene una ruta válida.
+    if (_profilePicture != null) {
+      final UserModel user = UserModel(
+        uid: '', // Puedes asignar un valor por defecto si es necesario
+        fullName: fullName,
+        email: email,
+        phoneNumber: phoneNumber,
+        profilePicture: _profilePicture,
+        password: password,
+      );
+
+      final UserModel? registeredUser = await _userController.registerUser(
+        context,
+        email,
+        password,
+        fullName,
+        phoneNumber,
+      );
+
+      if (registeredUser != null) {
+        // Registro exitoso, puedes navegar a la siguiente pantalla
+        // o realizar las acciones necesarias aquí.
+      } else {
+        // Registro fallido, muestra un mensaje de error.
+        setState(() {
+          _errorMessage =
+              'Error al registrar usuario. Por favor, inténtalo de nuevo.';
+        });
+      }
+    } else {
+      setState(() {
+        _errorMessage = 'Debes seleccionar una foto de perfil.';
+      });
+    }
+  }
+
+  // Función para seleccionar una imagen de la galería.
+  Future<void> _pickProfilePicture() async {
+    final imagePicker = ImagePicker();
+    final XFile? pickedFile = await imagePicker.pickImage(
+      source: ImageSource
+          .gallery, // Puedes cambiarlo a ImageSource.camera si quieres tomar una foto.
     );
 
-    if (user != null) {
-      // Registro exitoso, puedes navegar a la siguiente pantalla
-      // o realizar las acciones necesarias aquí.
-    } else {
-      // Registro fallido, muestra un mensaje de error.
+    if (pickedFile != null) {
       setState(() {
-        _errorMessage =
-            'Error al registrar usuario. Por favor, inténtalo de nuevo.';
+        _profilePicture = pickedFile.path;
       });
     }
   }
@@ -69,111 +103,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   height: 150.0,
                 ),
                 const SizedBox(height: 32.0),
-                TextFormField(
-                  controller: _fullNameController,
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    color: Colors.black,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Nombre Completo',
-                    labelStyle: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18.0,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 16.0,
-                      horizontal: 16.0,
-                    ),
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                ),
+                _buildTextField(
+                    _fullNameController, 'Nombre Completo', Icons.person),
                 const SizedBox(height: 16.0),
-                TextFormField(
-                  controller: _emailController,
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    color: Colors.black,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Correo Electrónico',
-                    labelStyle: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18.0,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 16.0,
-                      horizontal: 16.0,
-                    ),
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                ),
+                _buildTextField(
+                    _emailController, 'Correo Electrónico', Icons.email),
                 const SizedBox(height: 16.0),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    color: Colors.black,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Contraseña',
-                    labelStyle: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18.0,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 16.0,
-                      horizontal: 16.0,
-                    ),
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                ),
+                _buildPasswordField(
+                    _passwordController, 'Contraseña', Icons.lock),
                 const SizedBox(height: 16.0),
-                TextFormField(
-                  controller: _phoneNumberController,
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    color: Colors.black,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Número de Teléfono',
-                    labelStyle: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18.0,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 16.0,
-                      horizontal: 16.0,
-                    ),
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                ),
+                _buildTextField(
+                    _phoneNumberController, 'Número de Teléfono', Icons.phone),
                 const SizedBox(height: 32.0),
+                ElevatedButton(
+                  onPressed: _pickProfilePicture,
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.black,
+                    padding: EdgeInsets.symmetric(
+                      vertical: 12.0,
+                      horizontal: 32.0,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ),
+                  child: Text(
+                    'Seleccionar Foto de Perfil',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                    ),
+                  ),
+                ),
+                if (_profilePicture != null)
+                  Text(
+                    'Foto de Perfil seleccionada: $_profilePicture',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                    ),
+                  ),
+                const SizedBox(height: 16.0),
                 ElevatedButton(
                   onPressed: _register,
                   style: ElevatedButton.styleFrom(
@@ -205,6 +173,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Función para construir un campo de texto con icono.
+  Widget _buildTextField(
+      TextEditingController controller, String labelText, IconData icon) {
+    return TextFormField(
+      controller: controller,
+      style: TextStyle(
+        fontSize: 18.0,
+        color: Colors.black,
+      ),
+      decoration: InputDecoration(
+        labelText: labelText,
+        labelStyle: TextStyle(
+          color: Colors.black,
+          fontSize: 18.0,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+        contentPadding: EdgeInsets.symmetric(
+          vertical: 16.0,
+          horizontal: 16.0,
+        ),
+        prefixIcon: Icon(icon),
+      ),
+    );
+  }
+
+  // Función para construir un campo de contraseña con icono.
+  Widget _buildPasswordField(
+      TextEditingController controller, String labelText, IconData icon) {
+    return TextFormField(
+      controller: controller,
+      obscureText: true,
+      style: TextStyle(
+        fontSize: 18.0,
+        color: Colors.black,
+      ),
+      decoration: InputDecoration(
+        labelText: labelText,
+        labelStyle: TextStyle(
+          color: Colors.black,
+          fontSize: 18.0,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+        contentPadding: EdgeInsets.symmetric(
+          vertical: 16.0,
+          horizontal: 16.0,
+        ),
+        prefixIcon: Icon(icon),
       ),
     );
   }

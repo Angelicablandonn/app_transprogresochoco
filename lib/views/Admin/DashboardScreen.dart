@@ -42,87 +42,90 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Scaffold(
       appBar: Header(),
       drawer: Sidebar(),
-      body: Column(
-        children: [
-          _buildSection(
-            title: 'Acciones',
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildDashboardItem(
-                    icon: Icons.person_add,
-                    label: 'Agregar Usuario',
-                    value: '$_totalUsers',
-                  ),
-                  _buildDashboardItem(
-                    icon: Icons.add_location,
-                    label: 'Agregar Ruta',
-                    value: '$_totalRoutes',
-                  ),
-                  _buildDashboardItem(
-                    icon: Icons.add_shopping_cart,
-                    label: 'Agregar Venta',
-                    value: '$_totalTicketSales',
-                  ),
-                ],
-              ),
-            ],
-          ),
-          _buildSection(
-            title: 'Estadísticas',
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildBarChart(
-                    title: 'Total Usuarios',
-                    value: _totalUsers,
-                    color: Colors.blue,
-                  ),
-                  _buildBarChart(
-                    title: 'Total Rutas',
-                    value: _totalRoutes,
-                    color: Colors.green,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          _buildSection(
-            title: 'Ventas',
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: SizedBox(
-                  width: 100,
-                  height: 100,
-                  child: PieChart(
-                    PieChartData(
-                      sections: [
-                        PieChartSectionData(
-                          value: 20,
-                          title: '20%',
-                          color: Colors.blue,
-                        ),
-                        PieChartSectionData(
-                          value: 30,
-                          title: '30%',
-                          color: Colors.green,
-                        ),
-                        PieChartSectionData(
-                          value: 50,
-                          title: '50%',
-                          color: Colors.orange,
-                        ),
-                      ],
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildSection(
+              title: 'Acciones',
+              children: [
+                Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  children: [
+                    _buildDashboardItem(
+                      icon: Icons.person_add,
+                      label: 'Agregar Usuario',
+                      value: '$_totalUsers',
+                    ),
+                    _buildDashboardItem(
+                      icon: Icons.add_location,
+                      label: 'Agregar Ruta',
+                      value: '$_totalRoutes',
+                    ),
+                    _buildDashboardItem(
+                      icon: Icons.add_shopping_cart,
+                      label: 'Agregar Venta',
+                      value: '$_totalTicketSales',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            _buildSection(
+              title: 'Estadísticas',
+              children: [
+                Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  children: [
+                    _buildBarChart(
+                      title: 'Total Usuarios',
+                      value: _totalUsers,
+                      color: Colors.blue,
+                    ),
+                    _buildBarChart(
+                      title: 'Total Rutas',
+                      value: _totalRoutes,
+                      color: Colors.green,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            _buildSection(
+              title: 'Ventas',
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 200,
+                    child: PieChart(
+                      PieChartData(
+                        sections: [
+                          PieChartSectionData(
+                            value: 20,
+                            title: '20%',
+                            color: Colors.blue,
+                          ),
+                          PieChartSectionData(
+                            value: 30,
+                            title: '30%',
+                            color: Colors.green,
+                          ),
+                          PieChartSectionData(
+                            value: 50,
+                            title: '50%',
+                            color: Colors.orange,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -130,6 +133,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget _buildSection(
       {required String title, required List<Widget> children}) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -148,25 +152,28 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Widget _buildDashboardItem(
       {required IconData icon, required String label, required String value}) {
-    return Column(
-      children: [
-        IconButton(
-          icon: Icon(icon),
-          onPressed: () {
-            // Agregar lógica correspondiente
-          },
-        ),
-        const SizedBox(height: 10),
-        Text(
-          label,
-          style: TextStyle(fontSize: 18),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          value,
-          style: TextStyle(fontSize: 24),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          IconButton(
+            icon: Icon(icon),
+            onPressed: () {
+              // Agregar lógica correspondiente
+            },
+          ),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            style: TextStyle(fontSize: 18),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(fontSize: 24),
+          ),
+        ],
+      ),
     );
   }
 
@@ -185,8 +192,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
           const SizedBox(height: 10),
           SizedBox(
-            width: 100,
-            height: 100,
+            width: double.infinity,
+            height: 200,
             child: BarChart(
               BarChartData(
                 titlesData: FlTitlesData(

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/UserModel.dart';
+import '../../models/RouteModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Inicio de sesión
   Future<bool> loginUser(
       BuildContext context, String email, String password) async {
     try {
@@ -19,26 +19,23 @@ class UserController {
       final User? firebaseUser = userCredential.user;
 
       if (firebaseUser != null) {
-        // Verificar si el usuario es un administrador
-        final bool isAdmin = await isUserAdmin();
+        final bool isAdmin = await isUserAdmin(firebaseUser.uid);
         if (isAdmin) {
-          // Redirigir al dashboard después de iniciar sesión
-          Navigator.pushNamed(context, '/dashboard');
-          return true; // Inicio de sesión exitoso
+          Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
-          // Redirigir al usuario a una página de error
-          Navigator.pushNamed(context, '/error');
-          return false; // Inicio de sesión fallido
+          Navigator.pushReplacementNamed(context, '/home');
         }
+        return true;
       } else {
-        _showErrorDialog(context, 'Error al iniciar sesión.');
-        return false; // Inicio de sesión fallido
+        _showErrorDialog(
+            context, 'Error al iniciar sesión. Por favor, inténtalo de nuevo.');
+        return false;
       }
     } catch (e) {
       print("Error al iniciar sesión: $e");
       _showErrorDialog(
           context, 'Error al iniciar sesión. Por favor, inténtalo de nuevo.');
-      return false; // Inicio de sesión fallido
+      return false;
     }
   }
 
@@ -60,18 +57,18 @@ class UserController {
           fullName: fullName,
           email: email,
           phoneNumber: phoneNumber,
+          isAdmin: false, // Por defecto, no es un administrador
           password: password,
         );
 
-        // Guardar el usuario en Firestore
         await _firestore.collection('users').doc(user.uid).set(user.toMap());
 
-        // Redirigir al dashboard después de registrarse
-        Navigator.pushNamed(context, '/dashboard');
+        Navigator.pushReplacementNamed(context, '/dashboard');
 
         return user;
       } else {
-        _showErrorDialog(context, 'Error al registrar usuario.');
+        _showErrorDialog(context,
+            'Error al registrar usuario. Por favor, inténtalo de nuevo.');
         return null;
       }
     } catch (e) {
@@ -82,7 +79,6 @@ class UserController {
     }
   }
 
-  // Obtener datos de usuario desde Firestore
   Future<UserModel?> getUserData(String userId) async {
     try {
       final DocumentSnapshot userDoc =
@@ -99,21 +95,44 @@ class UserController {
     }
   }
 
-  // Método para verificar si el usuario está autenticado y es administrador
-
-  Future<bool> isUserAdmin() async {
+  Future<List<RouteModel>> getRoutes() async {
     try {
-      final User? firebaseUser = _auth.currentUser;
-      if (firebaseUser != null) {
-        // Obtener los datos del usuario desde Firestore
-        final UserModel? userData = await getUserData(firebaseUser.uid);
-        if (userData != null && userData.isAdmin) {
-          // El usuario está autenticado y es un administrador
-          return true;
-        }
-      }
-      // El usuario no está autenticado o no es un administrador
-      return false;
+      final routesSnapshot = await _firestore.collection('routes').get();
+      final routesList = routesSnapshot.docs.map((doc) {
+        final routeData = doc.data() as Map<String, dynamic>;
+        return RouteModel.fromMap(routeData, doc.id);
+      }).toList();
+      return routesList;
+    } catch (e) {
+      print('Error al obtener las rutas: $e');
+      return [];
+    }
+  }
+
+  Future<List<RouteModel>> searchRoutes(String query) async {
+    try {
+      final routesSnapshot = await _firestore
+          .collection('routes')
+          .where('destination', isEqualTo: query)
+          .get();
+
+      final routesList = routesSnapshot.docs.map((doc) {
+        final routeData = doc.data() as Map<String, dynamic>;
+        return RouteModel.fromMap(routeData, doc.id);
+      }).toList();
+
+      return routesList;
+    } catch (e) {
+      print('Error al buscar rutas: $e');
+      return [];
+    }
+  }
+
+  // Método para verificar si el usuario es administrador
+  Future<bool> isUserAdmin(String userId) async {
+    try {
+      final UserModel? userData = await getUserData(userId);
+      return userData != null && userData.isAdmin;
     } catch (e) {
       print("Error al verificar si el usuario es administrador: $e");
       return false;
@@ -124,7 +143,6 @@ class UserController {
   Future<void> signOut(BuildContext context) async {
     try {
       await _auth.signOut();
-      // Redirigir al usuario a la pantalla de inicio de sesión después de cerrar sesión
       Navigator.pushReplacementNamed(context, '/login');
     } catch (e) {
       print("Error al cerrar sesión: $e");
