@@ -43,6 +43,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> showBuyTicketDialog(RouteModel selectedRoute) async {
+    try {
+      await _userController.selectRouteAndBuyTickets(
+          context, widget.user, selectedRoute);
+      // Actualiza la lista de rutas después de la compra (opcional)
+      loadRoutes();
+    } catch (e) {
+      print('Error al comprar boletos: $e');
+      // Puedes mostrar un mensaje de error si es necesario
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,8 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 suffixIcon: IconButton(
                   icon: Icon(Icons.search),
                   onPressed: () {
-                    searchRoutes(_searchController
-                        .text); // Llama a la función de búsqueda.
+                    searchRoutes(_searchController.text);
                   },
                 ),
               ),
@@ -84,14 +95,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemCount: routes.length,
                 itemBuilder: (context, index) {
                   RouteModel route = routes[index];
-                  return ListTile(
-                    title: Text(route.name),
-                    subtitle: Text('Hora de Salida: ${route.departureTime}'),
-                    trailing: Text('\$${route.ticketPrice.toStringAsFixed(2)}'),
-                    onTap: () {
-                      // Implementa la lógica para seleccionar una ruta.
-                      // Puedes navegar a una nueva pantalla con más detalles, por ejemplo.
-                    },
+                  return Card(
+                    elevation: 5.0,
+                    margin: EdgeInsets.symmetric(vertical: 8.0),
+                    child: ListTile(
+                      title: Text(route.name),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Origen: ${route.origin}'),
+                          Text('Destino: ${route.destination}'),
+                          Text('Hora de Salida: ${route.departureTime}'),
+                          Text(
+                            'Precio: \$${route.ticketPrice.toStringAsFixed(2)}',
+                          ),
+                          // Agrega más información si es necesario
+                        ],
+                      ),
+                      trailing: Image.network(
+                        route.imageUrl,
+                        width: 60.0,
+                        height: 60.0,
+                        fit: BoxFit.cover,
+                      ),
+                      onTap: () {
+                        showBuyTicketDialog(route);
+                      },
+                    ),
                   );
                 },
               ),

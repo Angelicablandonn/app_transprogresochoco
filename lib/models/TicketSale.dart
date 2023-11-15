@@ -10,6 +10,7 @@ class TicketSale {
   Timestamp saleDate; // Fecha y hora de la venta
   String routeId; // ID de la ruta seleccionada
   double ticketPrice; // Precio unitario del tiquete
+  String approvalStatus; // Estado de aprobación de la venta
 
   TicketSale({
     required this.id,
@@ -19,8 +20,9 @@ class TicketSale {
     required this.quantity,
     required this.paymentMethod,
     required this.saleDate,
-    required this.routeId, // Nuevo campo para el ID de la ruta
-    required this.ticketPrice, // Nuevo campo para el precio unitario
+    required this.routeId,
+    required this.ticketPrice,
+    this.approvalStatus = 'No Aprobado', // Valor por defecto
   });
 
   // Método para crear una instancia de TicketSale desde un documento Firestore
@@ -34,9 +36,10 @@ class TicketSale {
       quantity: data['quantity'],
       paymentMethod: data['paymentMethod'],
       saleDate: data['saleDate'],
-      routeId: data['routeId'], // Asignar el valor del campo 'routeId'
-      ticketPrice:
-          data['ticketPrice'], // Asignar el valor del campo 'ticketPrice'
+      routeId: data['routeId'],
+      ticketPrice: data['ticketPrice'],
+      approvalStatus: data['approvalStatus'] ??
+          'No Aprobado', // Valor por defecto si no existe
     );
   }
 
@@ -49,8 +52,10 @@ class TicketSale {
       'quantity': quantity,
       'paymentMethod': paymentMethod,
       'saleDate': saleDate,
-      'routeId': routeId, // Agregar el campo 'routeId' al mapa
-      'ticketPrice': ticketPrice, // Agregar el campo 'ticketPrice' al mapa
+      'routeId': routeId,
+      'ticketPrice': ticketPrice,
+      'approvalStatus':
+          approvalStatus, // Agregar el campo 'approvalStatus' al mapa
     };
   }
 }

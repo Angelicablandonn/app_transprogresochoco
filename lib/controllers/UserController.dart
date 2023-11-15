@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/UserModel.dart';
 import '../../models/RouteModel.dart';
+import '../../models/TicketSale.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'AdminController.dart';
 
 class UserController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -148,6 +150,106 @@ class UserController {
       print("Error al cerrar sesión: $e");
       _showErrorDialog(
           context, 'Error al cerrar sesión. Por favor, inténtalo de nuevo.');
+    }
+  }
+
+  Future<void> selectRouteAndBuyTickets(
+      BuildContext context, UserModel user, RouteModel selectedRoute) async {
+    try {
+      // Obtén la lista de rutas disponibles
+      final List<RouteModel> routes = await getRoutes();
+
+      // Muestra un diálogo de selección de ruta
+      final selectedRoute = await showDialog<RouteModel>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Selecciona una ruta'),
+            content: Container(
+              width: double.maxFinite,
+              child: ListView.builder(
+                itemCount: routes.length,
+                itemBuilder: (context, index) {
+                  final route = routes[index];
+                  return ListTile(
+                    title: Text(route.name),
+                    subtitle: Text(
+                      'Hora de Salida: ${route.departureTime}',
+                    ),
+                    onTap: () {
+                      Navigator.pop(context, route);
+                    },
+                  );
+                },
+              ),
+            ),
+          );
+        },
+      );
+
+      if (selectedRoute != null) {
+        // La ruta ha sido seleccionada, ahora puedes registrar la compra de boletos
+        // Puedes mostrar un formulario o un diálogo para ingresar la cantidad de boletos, por ejemplo.
+        final quantity = await showDialog<int>(
+          context: context,
+          builder: (BuildContext context) {
+            return SimpleDialog(
+              title: Text('Ingrese la cantidad de boletos'),
+              children: [
+                SimpleDialogOption(
+                  onPressed: () {
+                    Navigator.pop(context, 1);
+                  },
+                  child: Text('1 boleto'),
+                ),
+                SimpleDialogOption(
+                  onPressed: () {
+                    Navigator.pop(context, 2);
+                  },
+                  child: Text('2 boletos'),
+                ),
+                SimpleDialogOption(
+                  onPressed: () {
+                    Navigator.pop(context, 3);
+                  },
+                  child: Text('3 boletos'),
+                ),
+                // Puedes agregar más opciones según tus necesidades
+              ],
+            );
+          },
+        );
+
+        if (quantity != null) {
+          // Ahora puedes registrar la compra de boletos
+          final ticketSale = TicketSale(
+            id: '', // El ID se generará automáticamente en Firestore
+            customerName: user.fullName,
+            customerEmail: user.email,
+            amount: selectedRoute.ticketPrice * quantity,
+            quantity: quantity,
+            paymentMethod: 'Efectivo', // Puedes cambiar esto según tu lógica
+            saleDate: Timestamp.now(),
+            routeId: selectedRoute.id,
+            ticketPrice: selectedRoute.ticketPrice,
+          );
+
+          // Llama al método para agregar la venta de boletos
+          final adminController = AdminController();
+          await adminController.addTicketSale(
+              ticketSale, selectedRoute, quantity);
+
+          // Muestra un mensaje de éxito
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Compra de boletos registrada con éxito.'),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error al seleccionar la ruta y comprar boletos: $e');
+      // Muestra un mensaje de error si es necesario
     }
   }
 

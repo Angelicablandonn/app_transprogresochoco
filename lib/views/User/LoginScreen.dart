@@ -42,12 +42,17 @@ class _LoginScreenState extends State<LoginScreen> {
       final UserModel? userData =
           await _userController.getUserData(userCredential.user!.uid);
 
-      if (userData != null && userData.isAdmin) {
-        // El usuario es un administrador, navega al panel de administrador
-        Navigator.pushNamed(context, '/dashboard');
+      if (userData != null) {
+        if (userData.isAdmin) {
+          // El usuario es un administrador, navega al panel de administrador
+          Navigator.pushNamed(context, '/dashboard');
+        } else {
+          // El usuario no es un administrador, navega a la pantalla de inicio del usuario
+          Navigator.pushNamed(context, '/home', arguments: {'user': userData});
+        }
       } else {
-        // El usuario no es un administrador, muestra un mensaje de error
-        _showError('No tienes permisos de administrador.');
+        // No se encontraron datos del usuario
+        _showError('Error al obtener los datos del usuario.');
       }
     } on FirebaseAuthException catch (e) {
       // Mostrar un mensaje de error si hay un error al iniciar sesión
