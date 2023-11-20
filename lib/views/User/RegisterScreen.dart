@@ -15,8 +15,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _phoneNumberController = TextEditingController();
   final UserController _userController = UserController();
   String? _errorMessage; // Variable para almacenar el mensaje de error
-  String?
-      _profilePicture; // Variable para almacenar la ruta de la foto de perfil
+  String? _profilePicture; // Variable para almacenar la ruta de la foto de perfil
+  bool _loading = false;
 
   Future<void> _register() async {
     final String fullName = _fullNameController.text;
@@ -39,14 +39,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       hideLoadingIndicator();
 
       if (registeredUser != null) {
-        // Registro exitoso, muestra un SnackBar y navega a la pantalla de inicio.
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Usuario registrado exitosamente.'),
-          ),
-        );
-
-        Navigator.pushReplacementNamed(context, '/home');
+        // Registro exitoso, puedes navegar a la siguiente pantalla
+        // o realizar las acciones necesarias aquí.
       } else {
         // Registro fallido, muestra un mensaje de error.
         setState(() {
@@ -61,7 +55,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // Función para seleccionar una imagen de la galería.
   Future<void> _pickProfilePicture() async {
     final imagePicker = ImagePicker();
     final XFile? pickedFile = await imagePicker.pickImage(
@@ -74,6 +67,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _profilePicture = pickedFile.path;
       });
     }
+  }
+
+  void showLoadingIndicator() {
+    setState(() {
+      _loading = true;
+    });
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16.0),
+              Text('Registrando...'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void hideLoadingIndicator() {
+    setState(() {
+      _loading = false;
+    });
+
+    Navigator.of(context).pop(); // Cierra el AlertDialog
   }
 
   @override
@@ -178,7 +203,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Función para construir un campo de texto con icono.
   Widget _buildTextField(
       TextEditingController controller, String labelText, IconData icon) {
     return TextFormField(
@@ -208,7 +232,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Función para construir un campo de contraseña con icono.
   Widget _buildPasswordField(
       TextEditingController controller, String labelText, IconData icon) {
     return TextFormField(
