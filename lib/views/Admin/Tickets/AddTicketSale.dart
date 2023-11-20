@@ -3,6 +3,7 @@ import 'package:app_transprogresochoco/controllers/AdminController.dart';
 import 'package:app_transprogresochoco/models/RouteModel.dart';
 import 'package:app_transprogresochoco/models/TicketSale.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddTicketSaleView extends StatefulWidget {
   @override
@@ -133,35 +134,41 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
 
   Widget _buildAddTicketButton() {
     return ElevatedButton(
-      onPressed: () {
+      onPressed: () async {
         if (_formKey.currentState!.validate()) {
-          _addTicketSale();
+          await _addTicketSale();
         }
       },
       child: Text('Agregar Venta', style: TextStyle(fontSize: 18)),
     );
   }
 
-  void _addTicketSale() async {
+  Future<void> _addTicketSale() async {
     if (_selectedRouteId != null) {
       final route = await _controller.getRouteById(_selectedRouteId!);
 
       if (route != null) {
-        final ticketSale = TicketSale(
-          id: '',
-          customerName: _customerNameController.text,
-          customerEmail: _customerEmailController.text,
-          amount: route.ticketPrice * _quantity,
-          quantity: _quantity,
-          paymentMethod: _paymentMethodController.text,
-          saleDate: Timestamp.now(),
-          routeId: route.id,
-          ticketPrice: route.ticketPrice,
-        );
+        final FirebaseAuth _auth = FirebaseAuth.instance;
+        final User? currentUser = _auth.currentUser;
 
-        await _controller.addTicketSale(ticketSale, route, _quantity);
+        if (currentUser != null) {
+          final ticketSale = TicketSale(
+            id: '',
+            customerName: _customerNameController.text,
+            customerEmail: _customerEmailController.text,
+            amount: route.ticketPrice * _quantity,
+            quantity: _quantity,
+            paymentMethod: _paymentMethodController.text,
+            saleDate: Timestamp.now(),
+            routeId: route.id,
+            ticketPrice: route.ticketPrice,
+            userId: currentUser.uid,
+          );
 
-        Navigator.of(context).pop();
+          await _controller.addTicketSale(ticketSale, route, _quantity);
+
+          Navigator.of(context).pop();
+        }
       }
     }
   }

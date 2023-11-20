@@ -14,8 +14,11 @@ import 'views/Admin/Routes/ListRoutesScreen.dart';
 import 'views/User/HomeScreen.dart';
 // Importa las vistas de ventas de tiquetes y sus respectivos editores y eliminadores aquí
 import 'package:app_transprogresochoco/views/Admin/Tickets/AddTicketSale.dart';
+import 'package:app_transprogresochoco/views/User/ProfileScreen.dart';
 import 'package:app_transprogresochoco/views/Admin/Tickets/EditTicketSaleScreen.dart';
+import 'package:app_transprogresochoco/views/User/PurchaseHistoryScreen.dart';
 import 'package:app_transprogresochoco/views/Admin/Tickets/TicketSalesListScreen.dart';
+import 'package:app_transprogresochoco/views/User/SettingsScreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,6 +74,16 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
+      onGenerateRoute: (settings) {
+        if (settings.name == '/home') {
+          final arguments = settings.arguments as Map<String, dynamic>;
+          final user = arguments['user'] as UserModel;
+          return MaterialPageRoute(
+            builder: (context) => HomeScreen(user: user),
+          );
+        }
+        // Agrega lógica similar para otras rutas si es necesario
+      },
       initialRoute: '/login',
       routes: {
         '/home': (context) {
@@ -79,6 +92,9 @@ class MyApp extends StatelessWidget {
           final user = arguments['user'] as UserModel;
           return HomeScreen(user: user);
         },
+        '/purchase_history': (context) => PurchaseHistoryScreen(),
+        '/profile': (context) => ProfileScreen(),
+        '/settings': (context) => SettingsScreen(),
         '/login': (context) => LoginScreen(),
         '/dashboard': (context) => AdminDashboard(),
         '/list_users': (context) => ListUsersView(),

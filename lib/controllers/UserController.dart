@@ -9,9 +9,61 @@ import 'AdminController.dart';
 class UserController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  UserModel? _user;
+  UserModel? get user => _user;
+  Future<UserModel?> getCurrentUser() async {
+    User? firebaseUser = _auth.currentUser;
 
+    if (firebaseUser != null) {
+      // Intenta cargar los datos del usuario desde Firestore
+      try {
+        UserModel? user = await getUserData(firebaseUser.uid);
+        return user;
+      } catch (e) {
+        print("Error al cargar datos de usuario: $e");
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  // Método para cargar los datos del usuario actual
+  Future<void> loadUserData(String userId) async {
+    try {
+      _user = await getUserData(userId);
+    } catch (e) {
+      print("Error al cargar datos de usuario: $e");
+    }
+  }
+
+  // Método para mostrar un cuadro de diálogo de error
+  void _showErrorDialog(BuildContext context, String errorMessage) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(errorMessage),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Método para iniciar sesión de usuario
   Future<bool> loginUser(
-      BuildContext context, String email, String password) async {
+    BuildContext context,
+    String email,
+    String password,
+  ) async {
     try {
       final UserCredential userCredential =
           await _auth.signInWithEmailAndPassword(
@@ -22,28 +74,87 @@ class UserController {
 
       if (firebaseUser != null) {
         final bool isAdmin = await isUserAdmin(firebaseUser.uid);
-        if (isAdmin) {
-          Navigator.pushReplacementNamed(context, '/dashboard');
-        } else {
-          Navigator.pushReplacementNamed(context, '/home');
-        }
+        isAdmin
+            ? Navigator.pushReplacementNamed(context, '/dashboard')
+            : Navigator.pushReplacementNamed(context, '/home');
         return true;
       } else {
         _showErrorDialog(
-            context, 'Error al iniciar sesión. Por favor, inténtalo de nuevo.');
+          context,
+          'Error al iniciar sesión. Por favor, inténtalo de nuevo.',
+        );
         return false;
       }
     } catch (e) {
       print("Error al iniciar sesión: $e");
       _showErrorDialog(
-          context, 'Error al iniciar sesión. Por favor, inténtalo de nuevo.');
+        context,
+        'Error al iniciar sesión. Por favor, inténtalo de nuevo.',
+      );
       return false;
     }
   }
 
-  // Registro de usuario
-  Future<UserModel?> registerUser(BuildContext context, String email,
-      String password, String fullName, String phoneNumber) async {
+// Método para actualizar los datos del usuario
+  Future<void> updateUserData({
+    required String fullName,
+    required String email,
+    required String phoneNumber,
+    String? profilePicture,
+    String? newPassword,
+  }) async {
+    try {
+      User? currentUser = _auth.currentUser;
+
+      if (currentUser != null) {
+        await _firestore.collection('users').doc(currentUser.uid).update({
+          'fullName': fullName,
+          'email': email,
+          'phoneNumber': phoneNumber,
+          'profilePicture': profilePicture,
+        });
+
+        if (newPassword != null) {
+          await _updateUserPassword(newPassword, currentUser.email!);
+        }
+      } else {
+        print("El usuario actual es nulo.");
+      }
+    } catch (e) {
+      print("Error al actualizar los datos del usuario: $e");
+      throw e;
+    }
+  }
+
+  Future<void> _updateUserPassword(String newPassword, String email) async {
+    try {
+      User? currentUser = _auth.currentUser;
+
+      if (currentUser != null) {
+        AuthCredential credentials = EmailAuthProvider.credential(
+          email: email,
+          password: user?.password ?? '',
+        );
+
+        await currentUser.reauthenticateWithCredential(credentials);
+        await currentUser.updatePassword(newPassword);
+      } else {
+        print("El usuario actual es nulo.");
+      }
+    } catch (e) {
+      print("Error al actualizar la contraseña del usuario: $e");
+      throw e;
+    }
+  }
+
+  // Método para registrar un nuevo usuario
+  Future<UserModel?> registerUser(
+    BuildContext context,
+    String email,
+    String password,
+    String fullName,
+    String phoneNumber,
+  ) async {
     try {
       final UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
@@ -59,7 +170,7 @@ class UserController {
           fullName: fullName,
           email: email,
           phoneNumber: phoneNumber,
-          isAdmin: false, // Por defecto, no es un administrador
+          isAdmin: false,
           password: password,
         );
 
@@ -69,18 +180,23 @@ class UserController {
 
         return user;
       } else {
-        _showErrorDialog(context,
-            'Error al registrar usuario. Por favor, inténtalo de nuevo.');
+        _showErrorDialog(
+          context,
+          'Error al registrar usuario. Por favor, inténtalo de nuevo.',
+        );
         return null;
       }
     } catch (e) {
       print("Error al registrar usuario: $e");
-      _showErrorDialog(context,
-          'Error al registrar usuario. Por favor, inténtalo de nuevo.');
+      _showErrorDialog(
+        context,
+        'Error al registrar usuario. Por favor, inténtalo de nuevo.',
+      );
       return null;
     }
   }
 
+  // Método para obtener datos de usuario
   Future<UserModel?> getUserData(String userId) async {
     try {
       final DocumentSnapshot userDoc =
@@ -97,6 +213,7 @@ class UserController {
     }
   }
 
+  // Método para obtener la lista de rutas disponibles
   Future<List<RouteModel>> getRoutes() async {
     try {
       final routesSnapshot = await _firestore.collection('routes').get();
@@ -111,6 +228,7 @@ class UserController {
     }
   }
 
+  // Método para buscar rutas por destino
   Future<List<RouteModel>> searchRoutes(String query) async {
     try {
       final routesSnapshot = await _firestore
@@ -149,17 +267,35 @@ class UserController {
     } catch (e) {
       print("Error al cerrar sesión: $e");
       _showErrorDialog(
-          context, 'Error al cerrar sesión. Por favor, inténtalo de nuevo.');
+        context,
+        'Error al cerrar sesión. Por favor, inténtalo de nuevo.',
+      );
+    }
+  }
+
+// Método para almacenar una venta en el historial de compras del usuario
+  Future<void> storePurchaseHistory(TicketSale ticketSale) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(ticketSale.userId) // Usamos el campo userId para la referencia
+          .collection('purchaseHistory')
+          .add(ticketSale.toMap());
+    } catch (error) {
+      print('Error al almacenar la venta: $error');
+      throw error;
     }
   }
 
   Future<void> selectRouteAndBuyTickets(
-      BuildContext context, UserModel user, RouteModel selectedRoute) async {
+    BuildContext context,
+    UserModel user,
+    RouteModel selectedRoute,
+    int quantity,
+  ) async {
     try {
-      // Obtén la lista de rutas disponibles
       final List<RouteModel> routes = await getRoutes();
 
-      // Muestra un diálogo de selección de ruta
       final selectedRoute = await showDialog<RouteModel>(
         context: context,
         builder: (BuildContext context) {
@@ -188,64 +324,33 @@ class UserController {
       );
 
       if (selectedRoute != null) {
-        // La ruta ha sido seleccionada, ahora puedes registrar la compra de boletos
-        // Puedes mostrar un formulario o un diálogo para ingresar la cantidad de boletos, por ejemplo.
-        final quantity = await showDialog<int>(
-          context: context,
-          builder: (BuildContext context) {
-            return SimpleDialog(
-              title: Text('Ingrese la cantidad de boletos'),
-              children: [
-                SimpleDialogOption(
-                  onPressed: () {
-                    Navigator.pop(context, 1);
-                  },
-                  child: Text('1 boleto'),
-                ),
-                SimpleDialogOption(
-                  onPressed: () {
-                    Navigator.pop(context, 2);
-                  },
-                  child: Text('2 boletos'),
-                ),
-                SimpleDialogOption(
-                  onPressed: () {
-                    Navigator.pop(context, 3);
-                  },
-                  child: Text('3 boletos'),
-                ),
-                // Puedes agregar más opciones según tus necesidades
-              ],
-            );
-          },
+        final ticketSale = TicketSale(
+          id: '',
+          customerName: user.fullName,
+          customerEmail: user.email,
+          amount: selectedRoute.ticketPrice * quantity,
+          quantity: quantity,
+          paymentMethod: 'Efectivo',
+          saleDate: Timestamp.now(),
+          routeId: selectedRoute.id,
+          ticketPrice: selectedRoute.ticketPrice,
+          userId: user.uid, // Asignamos el ID del usuario como userId
         );
 
-        if (quantity != null) {
-          // Ahora puedes registrar la compra de boletos
-          final ticketSale = TicketSale(
-            id: '', // El ID se generará automáticamente en Firestore
-            customerName: user.fullName,
-            customerEmail: user.email,
-            amount: selectedRoute.ticketPrice * quantity,
-            quantity: quantity,
-            paymentMethod: 'Efectivo', // Puedes cambiar esto según tu lógica
-            saleDate: Timestamp.now(),
-            routeId: selectedRoute.id,
-            ticketPrice: selectedRoute.ticketPrice,
-          );
+        final adminController = AdminController();
+        await adminController.addTicketSale(
+          ticketSale,
+          selectedRoute,
+          quantity,
+        );
 
-          // Llama al método para agregar la venta de boletos
-          final adminController = AdminController();
-          await adminController.addTicketSale(
-              ticketSale, selectedRoute, quantity);
+        await storePurchaseHistory(ticketSale);
 
-          // Muestra un mensaje de éxito
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Compra de boletos registrada con éxito.'),
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Compra de boletos registrada con éxito.'),
+          ),
+        );
       }
     } catch (e) {
       print('Error al seleccionar la ruta y comprar boletos: $e');
@@ -253,23 +358,22 @@ class UserController {
     }
   }
 
-  void _showErrorDialog(BuildContext context, String errorMessage) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Error'),
-          content: Text(errorMessage),
-          actions: <Widget>[
-            TextButton(
-              child: Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+  // Método para recuperar el historial de compras del usuario
+  Future<List<TicketSale>> getPurchaseHistory() async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_auth
+              .currentUser?.uid) // Asegúrate de tener el ID del usuario actual
+          .collection('purchaseHistory')
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => TicketSale.fromSnapshot(doc))
+          .toList();
+    } catch (error) {
+      print('Error al obtener el historial de compras: $error');
+      throw error;
+    }
   }
 }

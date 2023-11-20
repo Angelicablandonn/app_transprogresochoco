@@ -97,10 +97,10 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
               ),
               SizedBox(height: 24.0),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
-                    _updateTicketSale();
+                    await _updateTicketSale();
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -121,26 +121,33 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
     );
   }
 
-  void _updateTicketSale() {
-    final updatedTicketSale = TicketSale(
-      id: widget.ticketSale.id,
-      customerName: _customerName,
-      customerEmail: _customerEmail,
-      amount: widget.ticketSale.amount,
-      quantity: widget.ticketSale.quantity,
-      paymentMethod: _paymentMethod,
-      saleDate: widget.ticketSale.saleDate,
-      routeId: widget.ticketSale.routeId,
-      ticketPrice: widget.ticketSale.ticketPrice,
-    );
+  Future<void> _updateTicketSale() async {
+    try {
+      final updatedTicketSale = TicketSale(
+        id: widget.ticketSale.id,
+        customerName: _customerName,
+        userId: widget.ticketSale.userId, // Mantén el userId existente
+        customerEmail: _customerEmail,
+        amount: widget.ticketSale.amount,
+        quantity: widget.ticketSale.quantity,
+        paymentMethod: _paymentMethod,
+        saleDate: widget.ticketSale.saleDate,
+        routeId: widget.ticketSale.routeId,
+        ticketPrice: widget.ticketSale.ticketPrice,
+      );
 
-    _controller.updateTicketSale(updatedTicketSale).then((_) {
+      await _controller.updateTicketSale(updatedTicketSale);
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Venta de tiquetes editada con éxito'),
+      ));
+
       Navigator.of(context)
           .pop(true); // Indica que la edición se completó con éxito
-    }).catchError((error) {
+    } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Error al editar la venta de tiquetes: $error'),
       ));
-    });
+    }
   }
 }

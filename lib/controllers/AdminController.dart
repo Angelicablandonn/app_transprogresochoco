@@ -265,6 +265,7 @@ class AdminController {
 
       // Crear una instancia de TicketSale con los datos necesarios
       final TicketSale newTicketSale = TicketSale(
+        userId: ticketSale.userId,
         id: '',
         customerName: ticketSale.customerName,
         customerEmail: ticketSale.customerEmail,

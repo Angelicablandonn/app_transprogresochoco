@@ -55,4 +55,5 @@ class RouteModel {
       'imageUrl': imageUrl,
     };
   }
+  // Factory constructor to create a TicketSale object from a DocumentSnapshot
 }
