@@ -306,14 +306,23 @@ class AdminController {
   }
 
 // Obtener todas las ventas de tiquetes desde Firestore
+// Obtener todas las ventas de tiquetes desde Firestore
   Future<List<TicketSale>> getTicketSales() async {
     try {
       final salesSnapshot = await _firestore.collection('ticket_sales').get();
-      final salesList = salesSnapshot.docs.map((doc) {
-        return TicketSale.fromFirestore(doc); // Corrección en esta línea
-      }).toList();
+      final salesList = salesSnapshot.docs
+          .map((doc) {
+            try {
+              return TicketSale.fromFirestore(doc);
+            } catch (e) {
+              print('Error en documento ${doc.id}: $e');
+              return null;
+            }
+          })
+          .where((sale) => sale != null)
+          .toList();
 
-      return salesList;
+      return salesList.cast<TicketSale>();
     } catch (e) {
       print('Error al obtener las ventas de tiquetes: $e');
       return [];

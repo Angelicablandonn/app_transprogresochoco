@@ -1,21 +1,78 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../models/UserModel.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pdfLib;
 import '../../models/RouteModel.dart';
 import '../../models/TicketSale.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../models/UserModel.dart';
 import 'AdminController.dart';
+import 'package:path_provider/path_provider.dart';
 
 class UserController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   UserModel? _user;
   UserModel? get user => _user;
+
+  Future<void> downloadInvoice(TicketSale ticketSale, RouteModel route) async {
+    print('Estado de aprobación: ${ticketSale.approvalStatus}');
+
+    if (ticketSale.approvalStatus != 'Aprobado') {
+      print('La factura no está aprobada. No se puede descargar.');
+      return;
+    }
+
+    try {
+      final pdfLib.Document pdf = pdfLib.Document();
+
+      pdf.addPage(
+        pdfLib.Page(
+          build: (pdfLib.Context context) {
+            return pdfLib.Column(
+              children: [
+                pdfLib.Header(
+                  level: 0,
+                  child: pdfLib.Text('Factura de Compra'),
+                ),
+                pdfLib.Text('ID de Venta: ${ticketSale.id}'),
+                pdfLib.Text('Nombre del Cliente: ${ticketSale.customerName}'),
+                pdfLib.Text('Correo Electrónico: ${ticketSale.customerEmail}'),
+                pdfLib.Text('Monto Total: \$${ticketSale.amount.toString()}'),
+                pdfLib.Text('Cantidad de Boletos: ${ticketSale.quantity}'),
+                pdfLib.Text('Método de Pago: ${ticketSale.paymentMethod}'),
+                pdfLib.Text('Fecha de Venta: ${ticketSale.saleDate.toDate()}'),
+                pdfLib.Text('Ruta: ${route.name}'),
+              ],
+            );
+          },
+        ),
+      );
+
+      final List<int> pdfBytes = await pdf.save();
+
+      // Obtener el directorio de documentos
+      final Directory docDir = await getApplicationDocumentsDirectory();
+
+      // Crear el archivo en el directorio de documentos
+      final String pdfFileName = '${docDir.path}/invoice_${ticketSale.id}.pdf';
+      final File pdfFile = File(pdfFileName);
+      await pdfFile.writeAsBytes(pdfBytes);
+
+      print('Factura descargada con éxito: $pdfFileName');
+    } catch (error) {
+      print('Error al descargar la factura: $error');
+      throw error;
+    }
+  }
+
   Future<UserModel?> getCurrentUser() async {
     User? firebaseUser = _auth.currentUser;
 
     if (firebaseUser != null) {
-      // Intenta cargar los datos del usuario desde Firestore
       try {
         UserModel? user = await getUserData(firebaseUser.uid);
         return user;
@@ -28,7 +85,6 @@ class UserController {
     }
   }
 
-  // Método para cargar los datos del usuario actual
   Future<void> loadUserData(String userId) async {
     try {
       _user = await getUserData(userId);
@@ -37,7 +93,6 @@ class UserController {
     }
   }
 
-  // Método para mostrar un cuadro de diálogo de error
   void _showErrorDialog(BuildContext context, String errorMessage) {
     showDialog(
       context: context,
@@ -58,7 +113,6 @@ class UserController {
     );
   }
 
-  // Método para iniciar sesión de usuario
   Future<bool> loginUser(
     BuildContext context,
     String email,
@@ -95,7 +149,6 @@ class UserController {
     }
   }
 
-// Método para actualizar los datos del usuario
   Future<void> updateUserData({
     required String fullName,
     required String email,
@@ -147,7 +200,6 @@ class UserController {
     }
   }
 
-  // Método para registrar un nuevo usuario
   Future<UserModel?> registerUser(
     BuildContext context,
     String email,
@@ -196,7 +248,6 @@ class UserController {
     }
   }
 
-  // Método para obtener datos de usuario
   Future<UserModel?> getUserData(String userId) async {
     try {
       final DocumentSnapshot userDoc =
@@ -213,7 +264,6 @@ class UserController {
     }
   }
 
-  // Método para obtener la lista de rutas disponibles
   Future<List<RouteModel>> getRoutes() async {
     try {
       final routesSnapshot = await _firestore.collection('routes').get();
@@ -228,7 +278,6 @@ class UserController {
     }
   }
 
-  // Método para buscar rutas por destino
   Future<List<RouteModel>> searchRoutes(String query) async {
     try {
       final routesSnapshot = await _firestore
@@ -248,7 +297,6 @@ class UserController {
     }
   }
 
-  // Método para verificar si el usuario es administrador
   Future<bool> isUserAdmin(String userId) async {
     try {
       final UserModel? userData = await getUserData(userId);
@@ -259,7 +307,6 @@ class UserController {
     }
   }
 
-  // Método para cerrar sesión
   Future<void> signOut(BuildContext context) async {
     try {
       await _auth.signOut();
@@ -273,12 +320,11 @@ class UserController {
     }
   }
 
-// Método para almacenar una venta en el historial de compras del usuario
   Future<void> storePurchaseHistory(TicketSale ticketSale) async {
     try {
       await FirebaseFirestore.instance
           .collection('users')
-          .doc(ticketSale.userId) // Usamos el campo userId para la referencia
+          .doc(ticketSale.userId)
           .collection('purchaseHistory')
           .add(ticketSale.toMap());
     } catch (error) {
@@ -334,7 +380,7 @@ class UserController {
           saleDate: Timestamp.now(),
           routeId: selectedRoute.id,
           ticketPrice: selectedRoute.ticketPrice,
-          userId: user.uid, // Asignamos el ID del usuario como userId
+          userId: user.uid,
         );
 
         final adminController = AdminController();
@@ -354,26 +400,45 @@ class UserController {
       }
     } catch (e) {
       print('Error al seleccionar la ruta y comprar boletos: $e');
-      // Muestra un mensaje de error si es necesario
     }
   }
 
-  // Método para recuperar el historial de compras del usuario
   Future<List<TicketSale>> getPurchaseHistory() async {
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('users')
-          .doc(_auth
-              .currentUser?.uid) // Asegúrate de tener el ID del usuario actual
+          .doc(_auth.currentUser?.uid)
           .collection('purchaseHistory')
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => TicketSale.fromSnapshot(doc))
-          .toList();
+      List<TicketSale> purchaseHistory = querySnapshot.docs.map((doc) {
+        TicketSale ticketSale = TicketSale.fromSnapshot(doc);
+        print(
+            'Estado de aprobación para la venta ${ticketSale.id}: ${ticketSale.approvalStatus}');
+        return ticketSale;
+      }).toList();
+
+      return purchaseHistory;
     } catch (error) {
       print('Error al obtener el historial de compras: $error');
       throw error;
+    }
+  }
+
+  Future<RouteModel?> getRouteById(String routeId) async {
+    try {
+      final DocumentSnapshot routeDoc =
+          await _firestore.collection('routes').doc(routeId).get();
+
+      if (routeDoc.exists) {
+        return RouteModel.fromMap(
+            routeDoc.data() as Map<String, dynamic>, routeId);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("Error al obtener datos de la ruta: $e");
+      return null;
     }
   }
 }

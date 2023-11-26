@@ -17,6 +17,7 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
   String _customerName = '';
   String _customerEmail = '';
   String _paymentMethod = '';
+  String _approvalStatus = ''; // Estado de aprobación
 
   @override
   void initState() {
@@ -24,6 +25,7 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
     _customerName = widget.ticketSale.customerName;
     _customerEmail = widget.ticketSale.customerEmail;
     _paymentMethod = widget.ticketSale.paymentMethod;
+    _approvalStatus = widget.ticketSale.approvalStatus;
   }
 
   @override
@@ -95,6 +97,25 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
                   });
                 },
               ),
+              SizedBox(height: 16.0),
+              DropdownButtonFormField<String>(
+                value: _approvalStatus,
+                items: ['Aprobado', 'No Aprobado'].map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (String? value) {
+                  setState(() {
+                    _approvalStatus = value!;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Estado de Aprobación',
+                  border: OutlineInputBorder(),
+                ),
+              ),
               SizedBox(height: 24.0),
               ElevatedButton(
                 onPressed: () async {
@@ -104,7 +125,7 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.blue, // Color del botón
+                  primary: Colors.blue,
                 ),
                 child: Text(
                   'Guardar Cambios',
@@ -126,7 +147,7 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
       final updatedTicketSale = TicketSale(
         id: widget.ticketSale.id,
         customerName: _customerName,
-        userId: widget.ticketSale.userId, // Mantén el userId existente
+        userId: widget.ticketSale.userId,
         customerEmail: _customerEmail,
         amount: widget.ticketSale.amount,
         quantity: widget.ticketSale.quantity,
@@ -134,6 +155,7 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
         saleDate: widget.ticketSale.saleDate,
         routeId: widget.ticketSale.routeId,
         ticketPrice: widget.ticketSale.ticketPrice,
+        approvalStatus: _approvalStatus,
       );
 
       await _controller.updateTicketSale(updatedTicketSale);
@@ -142,8 +164,7 @@ class _EditTicketSaleScreenState extends State<EditTicketSaleScreen> {
         content: Text('Venta de tiquetes editada con éxito'),
       ));
 
-      Navigator.of(context)
-          .pop(true); // Indica que la edición se completó con éxito
+      Navigator.of(context).pop(true);
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Error al editar la venta de tiquetes: $error'),

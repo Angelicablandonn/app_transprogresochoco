@@ -9,8 +9,7 @@ class TicketSalesListScreen extends StatefulWidget {
 }
 
 class _TicketSalesListScreenState extends State<TicketSalesListScreen> {
-  final _controller =
-      AdminController(); // Asegúrate de tener el controlador adecuado
+  final AdminController _adminController = AdminController();
 
   @override
   Widget build(BuildContext context) {
@@ -19,17 +18,25 @@ class _TicketSalesListScreenState extends State<TicketSalesListScreen> {
         title: Text('Ventas de Tiquetes'),
       ),
       body: FutureBuilder<List<TicketSale>>(
-        future: _controller.getTicketSales(), // Obtener las ventas de tiquetes
+        future: _adminController.getTicketSales(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator(); // Muestra un indicador de carga mientras se cargan los datos.
+            return Center(
+              child: CircularProgressIndicator(),
+            );
           } else if (snapshot.hasError) {
-            return Text('Error al cargar las ventas de tiquetes');
+            return Center(
+              child: Text('Error al cargar las ventas de tiquetes'),
+            );
           } else {
             final ticketSales = snapshot.data;
+
             if (ticketSales == null || ticketSales.isEmpty) {
-              return Text('No hay ventas de tiquetes disponibles.');
+              return Center(
+                child: Text('No hay ventas de tiquetes disponibles.'),
+              );
             }
+
             return ListView.builder(
               itemCount: ticketSales.length,
               itemBuilder: (context, index) {
@@ -48,6 +55,8 @@ class _TicketSalesListScreenState extends State<TicketSalesListScreen> {
                       Text('ID de Ruta: ${sale.routeId}'),
                       Text(
                           'Precio Unitario del Tiquete: \$${sale.ticketPrice.toStringAsFixed(2)}'),
+                      Text('Estado de Aprobación: ${sale.approvalStatus}'),
+                      Text('ID de Usuario: ${sale.userId}'),
                     ],
                   ),
                   trailing: Row(
@@ -56,14 +65,13 @@ class _TicketSalesListScreenState extends State<TicketSalesListScreen> {
                       IconButton(
                         icon: Icon(Icons.edit),
                         onPressed: () {
-                          _editTicketSale(sale); // Editar la venta de tiquetes
+                          _editTicketSale(sale);
                         },
                       ),
                       IconButton(
                         icon: Icon(Icons.delete),
                         onPressed: () {
-                          _deleteTicketSale(
-                              sale.id); // Eliminar la venta de tiquetes por ID
+                          _deleteTicketSale(sale.id);
                         },
                       ),
                     ],
@@ -76,7 +84,7 @@ class _TicketSalesListScreenState extends State<TicketSalesListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).pop(); // Regresar atrás
+          Navigator.of(context).pop();
         },
         child: Icon(Icons.arrow_back),
       ),
@@ -90,7 +98,6 @@ class _TicketSalesListScreenState extends State<TicketSalesListScreen> {
         builder: (context) => EditTicketSaleScreen(ticketSale: sale),
       ),
     ).then((result) {
-      // Actualizar la lista después de editar la venta (si es necesario).
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Venta de tiquetes editada con éxito.'),
@@ -103,9 +110,7 @@ class _TicketSalesListScreenState extends State<TicketSalesListScreen> {
   }
 
   void _deleteTicketSale(String ticketSaleId) {
-    // Implementa la lógica para eliminar la venta de tiquetes aquí, usando el controlador.
-    _controller.deleteTicketSale(ticketSaleId).then((_) {
-      // Actualizar la lista después de eliminar la venta (si es necesario).
+    _adminController.deleteTicketSale(ticketSaleId).then((_) {
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Venta de tiquetes eliminada con éxito.'),
