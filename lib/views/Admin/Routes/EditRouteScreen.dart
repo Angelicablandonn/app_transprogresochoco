@@ -84,16 +84,23 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _buildTextField(_nameController, 'Nombre de la Ruta'),
-              _buildTextField(_originController, 'Origen'),
-              _buildTextField(_destinationController, 'Destino'),
-              _buildTextField(_ticketPriceController, 'Precio del Tiquete'),
               _buildTextField(
-                  _availableSeatsController, 'Asientos Disponibles'),
-              _buildTextField(_busTypeController, 'Tipo de Bus'),
-              _buildTextField(_descriptionController, 'Descripción'),
-              _buildTextField(_imageUrlController, 'URL de la Imagen'),
+                  _nameController, 'Nombre de la Ruta', Icons.directions_bus),
+              _buildTextField(_originController, 'Origen', Icons.location_on),
+              _buildTextField(
+                  _destinationController, 'Destino', Icons.location_on),
+              _buildTextField(_ticketPriceController, 'Precio del Tiquete',
+                  Icons.attach_money),
+              _buildTextField(_availableSeatsController, 'Asientos Disponibles',
+                  Icons.event_seat),
+              _buildTextField(
+                  _busTypeController, 'Tipo de Bus', Icons.directions_car),
+              _buildTextField(
+                  _descriptionController, 'Descripción', Icons.description),
+              _buildTextField(
+                  _imageUrlController, 'URL de la Imagen', Icons.image),
               _buildDateTimePicker(),
+              SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () async {
                   final updatedRoute = RouteModel(
@@ -102,8 +109,10 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
                     origin: _originController.text,
                     destination: _destinationController.text,
                     departureTime: _departureDateTime,
-                    ticketPrice: double.parse(_ticketPriceController.text),
-                    availableSeats: int.parse(_availableSeatsController.text),
+                    ticketPrice:
+                        double.tryParse(_ticketPriceController.text) ?? 0.0,
+                    availableSeats:
+                        int.tryParse(_availableSeatsController.text) ?? 0,
                     busType: _busTypeController.text,
                     description: _descriptionController.text,
                     imageUrl: _imageUrlController.text,
@@ -120,7 +129,8 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
@@ -128,6 +138,7 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(),
+          prefixIcon: Icon(icon),
         ),
       ),
     );
@@ -137,12 +148,14 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ElevatedButton(
+        ElevatedButton.icon(
           onPressed: () {
             _selectDateTime(context);
           },
-          child: Text('Seleccionar Fecha y Hora de Salida'),
+          icon: Icon(Icons.calendar_today),
+          label: Text('Seleccionar Fecha y Hora de Salida'),
         ),
+        SizedBox(height: 8),
         Text(
           'Fecha y Hora de Salida: ${_departureDateTime.toLocal()}'
               .split('.')[0],

@@ -16,37 +16,27 @@ class Sidebar extends StatelessWidget {
               child: CircularProgressIndicator(),
             );
           } else if (snapshot.hasError) {
-            // Manejar el error según tus necesidades
             return Center(
               child: Text('Error al obtener el usuario'),
             );
           } else {
             final UserModel? user = snapshot.data;
-
             return ListView(
+              padding: EdgeInsets.zero,
               children: [
-                DrawerHeader(
+                UserAccountsDrawerHeader(
+                  accountName: Text(user?.fullName ?? 'Usuario'),
+                  accountEmail: Text(user?.email ?? 'Correo electrónico'),
+                  currentAccountPicture: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      user?.fullName.substring(0, 1).toUpperCase() ?? '',
+                      style: TextStyle(fontSize: 40.0),
+                    ),
+                  ),
                   decoration: BoxDecoration(
-                    color: Color.fromARGB(0, 0, 94, 255),
+                    color: Color(0xFF123456),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Tu contenido del DrawerHeader
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.home),
-                  title: Text('Inicio'),
-                  onTap: () {
-                    // Navegar a la pantalla de inicio con el argumento 'user'
-                    Navigator.pushNamed(
-                      context,
-                      '/home',
-                      arguments: {'user': user},
-                    );
-                  },
                 ),
                 ListTile(
                   leading: Icon(Icons.shopping_cart),

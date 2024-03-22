@@ -18,7 +18,6 @@ class _AddUserViewState extends State<AddUserView> {
   final AdminController _adminController = AdminController();
 
   File? _profilePicture;
-
   bool _showPassword = false;
 
   @override
@@ -28,9 +27,11 @@ class _AddUserViewState extends State<AddUserView> {
         title: Text('Agregar Usuario'),
       ),
       body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildUserIcon(),
               SizedBox(height: 16.0),
@@ -68,40 +69,22 @@ class _AddUserViewState extends State<AddUserView> {
     return Column(
       children: [
         Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10.0),
-            color: Colors.black.withOpacity(0.5),
-          ),
-          padding: const EdgeInsets.all(16.0),
+          width: double.infinity,
           child: CircleAvatar(
-            backgroundColor: Colors.black,
             radius: 64,
-            child: Icon(
-              _profilePicture == null ? Icons.person : null,
-              size: 64,
-              color: Colors.white,
-            ),
+            backgroundColor: Colors.grey[300],
             backgroundImage:
                 _profilePicture != null ? FileImage(_profilePicture!) : null,
+            child: _profilePicture == null
+                ? Icon(Icons.person, size: 64, color: Colors.white)
+                : null,
           ),
         ),
         SizedBox(height: 16.0),
-        Container(
-          margin: EdgeInsets.all(10.0),
-          child: ElevatedButton.icon(
-            onPressed: _selectProfilePicture,
-            style: ElevatedButton.styleFrom(
-              primary: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-            ),
-            icon: Icon(Icons.camera_alt, color: Colors.white),
-            label: Text(
-              'Seleccionar Foto de Perfil',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
+        ElevatedButton.icon(
+          onPressed: _selectProfilePicture,
+          icon: Icon(Icons.camera_alt),
+          label: Text('Seleccionar Foto de Perfil'),
         ),
       ],
     );
@@ -113,91 +96,65 @@ class _AddUserViewState extends State<AddUserView> {
     IconData icon, {
     TextInputType keyboardType = TextInputType.text,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: Colors.black),
-          labelStyle: TextStyle(color: Colors.black),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-        ),
-        keyboardType: keyboardType,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Por favor, ingresa un valor válido';
-          }
-          return null;
-        },
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
       ),
+      keyboardType: keyboardType,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Por favor, ingresa un valor válido';
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildPasswordField() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: TextFormField(
-        controller: _passwordController,
-        decoration: InputDecoration(
-          labelText: 'Contraseña',
-          prefixIcon: Icon(Icons.lock, color: Colors.black),
-          labelStyle: TextStyle(color: Colors.black),
-          suffixIcon: IconButton(
-            icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
-            onPressed: () {
-              setState(() {
-                _showPassword = !_showPassword;
-              });
-            },
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
+    return TextFormField(
+      controller: _passwordController,
+      decoration: InputDecoration(
+        labelText: 'Contraseña',
+        prefixIcon: Icon(Icons.lock),
+        suffixIcon: IconButton(
+          icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+          onPressed: () {
+            setState(() {
+              _showPassword = !_showPassword;
+            });
+          },
         ),
-        obscureText: !_showPassword,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Por favor, ingresa una contraseña válida';
-          }
-          return null;
-        },
       ),
+      obscureText: !_showPassword,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Por favor, ingresa una contraseña válida';
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildAddUserButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: ElevatedButton(
-        onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            final String newUid =
-                DateTime.now().millisecondsSinceEpoch.toString();
-            final newUser = UserModel(
-              uid: newUid,
-              fullName: _fullNameController.text,
-              email: _emailController.text,
-              phoneNumber: _phoneNumberController.text,
-              profilePicture: _profilePicture?.path ?? '',
-              password: _passwordController.text,
-            );
-            _showPasswordDialog(newUser);
-          }
-        },
-        style: ElevatedButton.styleFrom(
-          primary: Colors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-        ),
-        child: Text(
-          'Guardar Usuario',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
+    return ElevatedButton(
+      onPressed: () {
+        if (_formKey.currentState!.validate()) {
+          final String newUid =
+              DateTime.now().millisecondsSinceEpoch.toString();
+          final newUser = UserModel(
+            uid: newUid,
+            fullName: _fullNameController.text,
+            email: _emailController.text,
+            phoneNumber: _phoneNumberController.text,
+            profilePicture: _profilePicture?.path ?? '',
+            password: _passwordController.text,
+          );
+          _showPasswordDialog(newUser);
+        }
+      },
+      child: Text('Guardar Usuario'),
     );
   }
 

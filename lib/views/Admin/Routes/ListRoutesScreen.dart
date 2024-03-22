@@ -12,8 +12,7 @@ class ListRoutesScreen extends StatefulWidget {
 class _ListRoutesScreenState extends State<ListRoutesScreen> {
   final AdminController _adminController = AdminController();
   List<RouteModel> _routes = [];
-  TextEditingController _searchController =
-      TextEditingController(); // Nuevo controlador para la búsqueda
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -33,10 +32,8 @@ class _ListRoutesScreenState extends State<ListRoutesScreen> {
     _loadRoutes();
   }
 
-  // Función para realizar la búsqueda de rutas
   Future<void> _searchRoutes(String query) async {
-    final searchResults = await _adminController.searchRoutes(
-        query, query); // Puedes ajustar los criterios de búsqueda
+    final searchResults = await _adminController.searchRoutes(query, query);
     setState(() {
       _routes = searchResults;
     });
@@ -50,21 +47,13 @@ class _ListRoutesScreenState extends State<ListRoutesScreen> {
       ),
       body: Column(
         children: [
-          // Campo de búsqueda
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
-              onChanged: (query) {
-                if (query.isEmpty) {
-                  _loadRoutes(); // Cargar todas las rutas si el campo de búsqueda está vacío
-                } else {
-                  _searchRoutes(
-                      query); // Realizar búsqueda cuando se escribe en el campo
-                }
-              },
+              onChanged: _searchRoutes,
               decoration: InputDecoration(
-                labelText: 'Buscar rutas por origen, destino, etc.',
+                labelText: 'Buscar rutas',
                 prefixIcon: Icon(Icons.search),
               ),
             ),
@@ -75,17 +64,17 @@ class _ListRoutesScreenState extends State<ListRoutesScreen> {
               itemBuilder: (context, index) {
                 final route = _routes[index];
                 return ListTile(
-                  leading: Image.network(route.imageUrl),
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(route.imageUrl),
+                  ),
                   title: Text(route.name),
                   subtitle: Text(
                       'Origen: ${route.origin}, Destino: ${route.destination}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  trailing: Wrap(
                     children: [
                       IconButton(
                         icon: Icon(Icons.edit),
                         onPressed: () {
-                          // Navega a la pantalla de edición pasando el ID de la ruta
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) =>
@@ -97,7 +86,6 @@ class _ListRoutesScreenState extends State<ListRoutesScreen> {
                       IconButton(
                         icon: Icon(Icons.delete),
                         onPressed: () {
-                          // Muestra un cuadro de diálogo de confirmación antes de eliminar
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
@@ -115,7 +103,6 @@ class _ListRoutesScreenState extends State<ListRoutesScreen> {
                                   TextButton(
                                     child: Text('Eliminar'),
                                     onPressed: () {
-                                      // Elimina la ruta y cierra el cuadro de diálogo
                                       _deleteRoute(route.id);
                                       Navigator.of(context).pop();
                                     },
@@ -161,7 +148,16 @@ class RouteDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Image.network(route.imageUrl), // Agrega esta línea
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage(route.imageUrl),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
             Text('Nombre de la Ruta: ${route.name}'),
             Text('Origen: ${route.origin}'),
             Text('Destino: ${route.destination}'),

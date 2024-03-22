@@ -82,6 +82,26 @@ class AdminController {
     return null;
   }
 
+  Future<List<TicketSale>> getPurchaseHistory(String userId) async {
+    try {
+      final historySnapshot = await _firestore
+          .collection('ticket_sales')
+          .where('userId', isEqualTo: userId)
+          .orderBy('saleDate', descending: true)
+          .get();
+
+      final historyList = historySnapshot.docs
+          .map((doc) => TicketSale.fromFirestore(doc))
+          .where((sale) => sale != null)
+          .toList();
+
+      return historyList.cast<TicketSale>();
+    } catch (e) {
+      print('Error al obtener el historial de compras: $e');
+      return [];
+    }
+  }
+
 // Función para obtener la lista de usuarios registrados
   Future<List<Map<String, dynamic>>> getUsers() async {
     try {
@@ -253,11 +273,12 @@ class AdminController {
     }
   }
 
-  // Agregar una venta de tiquete a Firestore
-  Future<void> addTicketSale(
+  Future<String> addTicketSale(
     TicketSale ticketSale,
     RouteModel selectedRoute,
     int quantity,
+    String downloadURL,
+    String purchaseHistoryId, // Agregar purchaseHistoryId como parámetro
   ) async {
     try {
       // Calcular el monto total de la venta
@@ -275,14 +296,21 @@ class AdminController {
         saleDate: Timestamp.now(),
         routeId: selectedRoute.id,
         ticketPrice: selectedRoute.ticketPrice,
+        downloadURL: downloadURL,
+        purchaseHistoryId: purchaseHistoryId,
       );
 
       // Guardar la venta de tiquete en Firestore
       await _firestore.collection('ticket_sales').add(newTicketSale.toMap());
 
       print('Venta de tiquete agregada con éxito.');
+
+      // Devolver la URL de descarga
+      return downloadURL;
     } catch (e) {
       print('Error al agregar la venta de tiquete: $e');
+      // Manejar el error según sea necesario
+      throw e;
     }
   }
 
@@ -305,7 +333,15 @@ class AdminController {
     }
   }
 
-// Obtener todas las ventas de tiquetes desde Firestore
+  Future<void> storePurchaseHistory(TicketSale ticketSale) async {
+    try {
+      await _firestore.collection('purchase_history').add(ticketSale.toMap());
+      print('Compra almacenada en el historial con éxito.');
+    } catch (e) {
+      print('Error al almacenar la compra en el historial: $e');
+    }
+  }
+
 // Obtener todas las ventas de tiquetes desde Firestore
   Future<List<TicketSale>> getTicketSales() async {
     try {

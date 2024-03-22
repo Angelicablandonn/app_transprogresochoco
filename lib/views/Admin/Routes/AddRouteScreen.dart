@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'package:app_transprogresochoco/controllers/AdminController.dart';
-import 'package:app_transprogresochoco/models/RouteModel.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:app_transprogresochoco/controllers/AdminController.dart';
+import 'package:app_transprogresochoco/models/RouteModel.dart';
 
 class AddRouteScreen extends StatefulWidget {
   @override
@@ -18,10 +18,10 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
   final TextEditingController _busTypeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   DateTime _departureDateTime = DateTime.now();
-  DateTime selectDateTime = DateTime.now();
   final TextEditingController _ticketPriceController = TextEditingController();
   final AdminController _adminController = AdminController();
   File? _imageFile;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   Future<void> _selectDateTime(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -61,6 +61,10 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
   }
 
   Future<void> _addRoute() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     final newRoute = RouteModel(
       id: UniqueKey().toString(),
       name: _nameController.text,
@@ -71,15 +75,15 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
       availableSeats: int.parse(_availableSeatsController.text),
       busType: _busTypeController.text,
       description: _descriptionController.text,
-      imageUrl: '', // Debes actualizar esta URL con la URL de la imagen cargada
+      imageUrl: '', // Actualizar con la URL de la imagen cargada
     );
 
     if (_imageFile != null) {
-      // Sube la imagen a Firebase Storage y obtén su URL
+      // Subir imagen a Firebase Storage y obtener su URL
       final imageUrl = await _adminController.uploadRouteImage(_imageFile!);
 
       if (imageUrl != null) {
-        // Actualiza la URL de la imagen en la nueva ruta
+        // Actualizar la URL de la imagen en la nueva ruta
         newRoute.imageUrl = imageUrl;
       }
     }
@@ -96,31 +100,34 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              _buildTextField(
-                  _nameController, 'Nombre de la Ruta', Icons.directions_bus),
-              _buildTextField(_originController, 'Origen', Icons.location_on),
-              _buildTextField(
-                  _destinationController, 'Destino', Icons.location_on),
-              _buildTextField(_availableSeatsController, 'Asientos Disponibles',
-                  Icons.event_seat),
-              _buildTextField(
-                  _busTypeController, 'Tipo de Vehículo', Icons.directions_car),
-              _buildTextField(_descriptionController, 'Descripción de la Ruta',
-                  Icons.description),
-              _buildDateTimePicker(),
-              _buildTextField(_ticketPriceController, 'Precio del Tiquete',
-                  Icons.attach_money),
-              _buildImageUploader(),
-              SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: _addRoute,
-                child: Text('Agregar Ruta'),
-              ),
-            ],
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _buildTextField(
+                    _nameController, 'Nombre de la Ruta', Icons.directions_bus),
+                _buildTextField(_originController, 'Origen', Icons.location_on),
+                _buildTextField(
+                    _destinationController, 'Destino', Icons.location_on),
+                _buildTextField(_availableSeatsController,
+                    'Asientos Disponibles', Icons.event_seat),
+                _buildTextField(_busTypeController, 'Tipo de Vehículo',
+                    Icons.directions_car),
+                _buildTextField(_descriptionController,
+                    'Descripción de la Ruta', Icons.description),
+                _buildDateTimePicker(context),
+                _buildTextField(_ticketPriceController, 'Precio del Tiquete',
+                    Icons.attach_money),
+                _buildImageUploader(context),
+                SizedBox(height: 16.0),
+                ElevatedButton(
+                  onPressed: _addRoute,
+                  child: Text('Agregar Ruta'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -138,20 +145,28 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
           border: OutlineInputBorder(),
           prefixIcon: Icon(icon),
         ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Por favor, ingresa un valor';
+          }
+          return null;
+        },
       ),
     );
   }
 
-  Widget _buildDateTimePicker() {
+  Widget _buildDateTimePicker(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ElevatedButton(
+        ElevatedButton.icon(
           onPressed: () {
             _selectDateTime(context);
           },
-          child: Text('Seleccionar Fecha y Hora de Salida'),
+          icon: Icon(Icons.calendar_today),
+          label: Text('Seleccionar Fecha y Hora de Salida'),
         ),
+        SizedBox(height: 8.0),
         Text(
           'Fecha y Hora de Salida: ${_departureDateTime.toLocal()}'
               .split('.')[0],
@@ -160,16 +175,18 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
     );
   }
 
-  Widget _buildImageUploader() {
+  Widget _buildImageUploader(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ElevatedButton(
+        ElevatedButton.icon(
           onPressed: () {
             _uploadImage();
           },
-          child: Text('Seleccionar Imagen'),
+          icon: Icon(Icons.image),
+          label: Text('Seleccionar Imagen'),
         ),
+        SizedBox(height: 8.0),
         if (_imageFile != null)
           Image.file(
             _imageFile!,

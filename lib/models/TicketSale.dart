@@ -1,17 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TicketSale {
-  String id; // Identificador único de la venta
-  String customerName; // Nombre del cliente
-  String customerEmail; // Correo electrónico del cliente
-  double amount; // Monto total de la venta
-  int quantity; // Cantidad de tiquetes vendidos
-  String paymentMethod; // Método de pago utilizado
-  Timestamp saleDate; // Fecha y hora de la venta
-  String routeId; // ID de la ruta seleccionada
-  double ticketPrice; // Precio unitario del tiquete
-  String approvalStatus; // Estado de aprobación de la venta
-  String userId; // ID del usuario asociado a la venta
+  String id;
+  String customerName;
+  String customerEmail;
+  double amount;
+  int quantity;
+  String paymentMethod;
+  Timestamp saleDate;
+  String routeId;
+  double ticketPrice;
+  String approvalStatus;
+  String userId;
+  String downloadURL; // Nuevo campo para almacenar la URL de descarga
+  String
+      purchaseHistoryId; // Nuevo campo para almacenar la referencia a PurchaseHistory
 
   TicketSale({
     required this.id,
@@ -23,11 +26,12 @@ class TicketSale {
     required this.saleDate,
     required this.routeId,
     required this.ticketPrice,
-    required this.userId, // Agrega el campo 'userId' al constructor
-    this.approvalStatus = 'No Aprobado', // Valor por defecto
+    required this.userId,
+    required this.downloadURL, // Agrega el campo 'downloadURL' al constructor
+    required this.purchaseHistoryId, // Agrega el campo 'purchaseHistoryId'
+    this.approvalStatus = 'No Aprobado',
   });
 
-  // Método para crear una instancia de TicketSale desde un documento Firestore
   factory TicketSale.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return TicketSale(
@@ -40,13 +44,14 @@ class TicketSale {
       saleDate: data['saleDate'],
       routeId: data['routeId'],
       ticketPrice: data['ticketPrice'],
-      userId: data['userId'], // Agregar el campo 'userId'
-      approvalStatus: data['approvalStatus'] ??
-          'No Aprobado', // Valor por defecto si no existe
+      userId: data['userId'],
+      downloadURL: data['downloadURL'], // Agregar el campo 'downloadURL'
+      purchaseHistoryId:
+          data['purchaseHistoryId'], // Agregar el campo 'purchaseHistoryId'
+      approvalStatus: data['approvalStatus'] ?? 'No Aprobado',
     );
   }
 
-  // Método para convertir una instancia de TicketSale en un mapa para Firestore
   Map<String, dynamic> toMap() {
     return {
       'customerName': customerName,
@@ -57,9 +62,11 @@ class TicketSale {
       'saleDate': saleDate,
       'routeId': routeId,
       'ticketPrice': ticketPrice,
-      'userId': userId, // Agregar el campo 'userId' al mapa
-      'approvalStatus':
-          approvalStatus, // Agregar el campo 'approvalStatus' al mapa
+      'userId': userId,
+      'downloadURL': downloadURL, // Agregar el campo 'downloadURL'
+      'purchaseHistoryId':
+          purchaseHistoryId, // Agregar el campo 'purchaseHistoryId'
+      'approvalStatus': approvalStatus,
     };
   }
 
@@ -75,7 +82,10 @@ class TicketSale {
       saleDate: data['saleDate'] ?? Timestamp.now(),
       routeId: data['routeId'] ?? '',
       ticketPrice: (data['ticketPrice'] ?? 0.0).toDouble(),
-      userId: data['userId'] ?? '', // Agregar el campo 'userId'
+      userId: data['userId'] ?? '',
+      downloadURL: data['downloadURL'] ?? '', // Agregar el campo 'downloadURL'
+      purchaseHistoryId: data['purchaseHistoryId'] ??
+          '', // Agregar el campo 'purchaseHistoryId'
       approvalStatus: data['approvalStatus'] ?? '',
     );
   }

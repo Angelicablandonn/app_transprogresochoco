@@ -44,7 +44,12 @@ dependencies:
   intl: ^0.18.1
   fl_chart: ^0.40.0
   pdf: ^3.5.0
-  path_provider: ^2.0.14
+  path_provider: ^2.1.1
+  permission_handler: ^11.0.1
+  path: ^1.8.3
+  universal_io: ^2.2.2
+  universal_html: ^2.2.4
+  file_picker: ^6.1.1
 
 
 
@@ -65,8 +70,14 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  fonts:
+    - family: Arial
+      fonts:
+        - asset: fonts/arial.ttf
+
   assets:
     - assets/images/
+ 
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

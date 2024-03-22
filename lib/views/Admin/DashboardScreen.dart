@@ -43,39 +43,50 @@ class _AdminDashboardState extends State<AdminDashboard> {
       appBar: Header(),
       drawer: Sidebar(),
       body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildSection(
               title: 'Acciones',
               children: [
-                Wrap(
-                  alignment: WrapAlignment.spaceEvenly,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildDashboardItem(
                       icon: Icons.person_add,
                       label: 'Agregar Usuario',
                       value: '$_totalUsers',
+                      onTap: () {
+                        // Lógica para agregar usuario
+                      },
                     ),
                     _buildDashboardItem(
                       icon: Icons.add_location,
                       label: 'Agregar Ruta',
                       value: '$_totalRoutes',
+                      onTap: () {
+                        // Lógica para agregar ruta
+                      },
                     ),
                     _buildDashboardItem(
                       icon: Icons.add_shopping_cart,
                       label: 'Agregar Venta',
                       value: '$_totalTicketSales',
+                      onTap: () {
+                        // Lógica para agregar venta
+                      },
                     ),
                   ],
                 ),
               ],
             ),
+            SizedBox(height: 20),
             _buildSection(
               title: 'Estadísticas',
               children: [
-                Wrap(
-                  alignment: WrapAlignment.spaceEvenly,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildBarChart(
                       title: 'Total Usuarios',
@@ -91,6 +102,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ],
             ),
+            SizedBox(height: 20),
             _buildSection(
               title: 'Ventas',
               children: [
@@ -127,6 +139,35 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ],
         ),
       ),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.grey[900], // Color de fondo del BottomAppBar
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            IconButton(
+              icon: Icon(Icons.person),
+              onPressed: () {
+                // Lógica para manejar la selección de usuarios
+              },
+              color: Colors.white,
+            ),
+            IconButton(
+              icon: Icon(Icons.location_on),
+              onPressed: () {
+                // Lógica para manejar la selección de rutas
+              },
+              color: Colors.white,
+            ),
+            IconButton(
+              icon: Icon(Icons.shopping_cart),
+              onPressed: () {
+                // Lógica para manejar la selección de ventas
+              },
+              color: Colors.white,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -142,6 +183,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             style: TextStyle(
               fontSize: 24.0,
               fontWeight: FontWeight.bold,
+              color: Colors.indigo, // Color principal para los títulos
             ),
           ),
         ),
@@ -151,88 +193,85 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildDashboardItem(
-      {required IconData icon, required String label, required String value}) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          IconButton(
-            icon: Icon(icon),
-            onPressed: () {
-              // Agregar lógica correspondiente
-            },
-          ),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            style: TextStyle(fontSize: 18),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: TextStyle(fontSize: 24),
-          ),
-        ],
-      ),
+      {required IconData icon,
+      required String label,
+      required String value,
+      required VoidCallback onTap}) {
+    return Column(
+      children: [
+        IconButton(
+          icon: Icon(icon, size: 36, color: Colors.indigo),
+          onPressed: onTap,
+        ),
+        const SizedBox(height: 10),
+        Text(
+          label,
+          style: TextStyle(fontSize: 18, color: Colors.indigo),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          value,
+          style: TextStyle(
+              fontSize: 24, fontWeight: FontWeight.bold, color: Colors.indigo),
+        ),
+      ],
     );
   }
 
   Widget _buildBarChart(
       {required String title, required int value, required Color color}) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+    return Column(
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.indigo,
           ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            height: 200,
-            child: BarChart(
-              BarChartData(
-                titlesData: FlTitlesData(
-                  leftTitles: SideTitles(
-                    showTitles: true,
-                    getTextStyles: (context, value) => const TextStyle(
-                      color: const Color(0xff7589a2),
-                    ),
-                    margin: 10,
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: 150,
+          height: 200,
+          child: BarChart(
+            BarChartData(
+              titlesData: FlTitlesData(
+                leftTitles: SideTitles(
+                  showTitles: true,
+                  getTextStyles: (context, value) => const TextStyle(
+                    color: Colors.indigo,
                   ),
-                  topTitles: SideTitles(showTitles: false),
-                  rightTitles: SideTitles(showTitles: false),
-                  bottomTitles: SideTitles(
-                    showTitles: true,
-                    getTextStyles: (context, value) => const TextStyle(
-                      color: const Color(0xff7589a2),
-                    ),
-                    margin: 10,
-                  ),
+                  margin: 10,
                 ),
-                borderData: FlBorderData(
-                  show: false,
-                ),
-                barGroups: [
-                  BarChartGroupData(
-                    x: 0,
-                    barRods: [
-                      BarChartRodData(
-                        y: value.toDouble(),
-                        colors: [color],
-                      ),
-                    ],
+                topTitles: SideTitles(showTitles: false),
+                rightTitles: SideTitles(showTitles: false),
+                bottomTitles: SideTitles(
+                  showTitles: true,
+                  getTextStyles: (context, value) => const TextStyle(
+                    color: Colors.indigo,
                   ),
-                ],
+                  margin: 10,
+                ),
               ),
+              borderData: FlBorderData(
+                show: false,
+              ),
+              barGroups: [
+                BarChartGroupData(
+                  x: 0,
+                  barRods: [
+                    BarChartRodData(
+                      y: value.toDouble(),
+                      colors: [color],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

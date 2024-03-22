@@ -1,63 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:app_transprogresochoco/controllers/UserController.dart';
 import 'package:app_transprogresochoco/models/UserModel.dart';
+import 'package:app_transprogresochoco/views/User/Includes/Sidebar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:app_transprogresochoco/models/RouteModel.dart';
+import 'package:app_transprogresochoco/views/User/HomeScreen.dart';
 
 class ProfileScreen extends StatefulWidget {
+  final UserModel user;
+  ProfileScreen({required this.user});
+
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final UserController _userController = UserController();
-
-  late UserModel _user; // Variable para almacenar los datos del usuario
+  late UserModel _user;
+  List<RouteModel> routes = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // Cargar datos del usuario al iniciar la pantalla
+    _user = widget.user;
+    _isLoading = false;
   }
 
-  // Función para cargar los datos del usuario
-  Future<void> _loadUserData() async {
+  Future<void> _signOut() async {
+    await _userController.signOut(context);
+  }
+
+  Future<void> _loadRoutes() async {
     try {
-      // Obtén el usuario actual desde FirebaseAuth
-      final currentUser = await _userController.getCurrentUser();
-
-      if (currentUser != null) {
-        // Obten el ID del usuario actual
-        final userId = currentUser.uid;
-
-        UserModel? user = await _userController.getUserData(userId);
-
-        if (user != null) {
-          setState(() {
-            _user = user;
-            _isLoading = false;
-          });
-        } else {
-          // Manejar el caso en el que no se puedan cargar los datos del usuario
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      } else {
-        // Manejar el caso en el que no haya un usuario autenticado
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Error al cargar datos del usuario: $e');
-      // Manejar el error según tus necesidades
+      final retrievedRoutes = await _userController.getRoutes();
       setState(() {
-        _isLoading = false;
+        routes = retrievedRoutes;
       });
+    } catch (error) {
+      print('Error al cargar las rutas: $error');
     }
   }
 
-  // Función para mostrar un cuadro de diálogo de confirmación
+  Future<UserModel?> getCurrentUser() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        return UserModel(
+          uid: user.uid,
+          fullName: user.displayName ?? '',
+          email: user.email ?? '',
+          phoneNumber: user.phoneNumber ?? '',
+          profilePicture: user.photoURL,
+          isAdmin: false,
+          password: '',
+        );
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Error al obtener el usuario actual: $e');
+      return null;
+    }
+  }
+
   Future<void> _showConfirmationDialog(BuildContext context) async {
     return showDialog(
       context: context,
@@ -68,14 +75,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Cerrar el cuadro de diálogo
+                Navigator.of(context).pop();
               },
               child: Text('Cancelar'),
             ),
             TextButton(
               onPressed: () {
-                _signOut(); // Cerrar sesión si se confirma
-                Navigator.of(context).pop(); // Cerrar el cuadro de diálogo
+                _signOut();
+                Navigator.of(context).pop();
               },
               child: Text('Aceptar'),
             ),
@@ -85,46 +92,128 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Función para cerrar sesión
-  Future<void> _signOut() async {
-    await _userController.signOut(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Perfil'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // Esta línea te lleva de vuelta a la pantalla anterior
-          },
+        title: Text(
+          'Perfil',
+          style: TextStyle(fontSize: 18.0),
         ),
+        backgroundColor: Color(0xFF123456),
+        elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CircleAvatar(
+              backgroundImage: NetworkImage(_user.profilePicture ?? ''),
+            ),
+          ),
+        ],
       ),
+      drawer: Sidebar(),
       body: _isLoading
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Muestra los detalles del usuario (puedes personalizar según tu modelo de usuario)
-                Text('Nombre: ${_user.fullName}'),
-                Text('Correo Electrónico: ${_user.email}'),
-                Text('Teléfono: ${_user.phoneNumber}'),
-                // Añade más detalles según tus necesidades
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    _showConfirmationDialog(
-                        context); // Mostrar el cuadro de diálogo de confirmación al hacer clic en el botón
-                  },
-                  child: Text('Cerrar Sesión'),
-                ),
-              ],
+          : SingleChildScrollView(
+              padding: EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 20.0),
+                  Text(
+                    'Información Personal',
+                    style: TextStyle(
+                      fontSize: 24.0,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF123456),
+                    ),
+                  ),
+                  SizedBox(height: 20.0),
+                  _buildProfileItem('Nombre:', _user.fullName),
+                  _buildProfileItem('Correo Electrónico:', _user.email),
+                  _buildProfileItem('Teléfono:', _user.phoneNumber),
+                  SizedBox(height: 20.0),
+                  ElevatedButton(
+                    onPressed: () {
+                      _showConfirmationDialog(context);
+                    },
+                    child: Text('Cerrar Sesión'),
+                  ),
+                ],
+              ),
             ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Inicio',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: 'Registro de Compra',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: 'Perfil',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Buscar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.logout),
+            label: 'Salir',
+          ),
+        ],
+        unselectedItemColor: Colors.grey,
+        selectedItemColor: Color(0xFF123456),
+        showUnselectedLabels: true,
+        currentIndex: 2,
+        onTap: (index) async {
+          switch (index) {
+            case 0:
+              Navigator.pushReplacementNamed(context, '/home');
+              break;
+            case 1:
+              Navigator.pushReplacementNamed(context, '/purchase_history');
+              break;
+            case 2:
+              UserModel? currentUser = await getCurrentUser();
+              if (currentUser != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfileScreen(user: currentUser),
+                  ),
+                );
+              } else {
+                print('No se pudo obtener el usuario actual');
+              }
+              break;
+            case 3:
+              Navigator.pushNamed(context, '/search');
+              break;
+            case 4:
+              _signOut();
+              break;
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildProfileItem(String title, String value) {
+    return ListTile(
+      title: Text(
+        title,
+        style: TextStyle(fontSize: 18.0),
+      ),
+      subtitle: Text(
+        value,
+        style: TextStyle(fontSize: 16.0),
+      ),
     );
   }
 }

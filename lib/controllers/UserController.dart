@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pdfLib;
@@ -9,7 +9,11 @@ import '../../models/RouteModel.dart';
 import '../../models/TicketSale.dart';
 import '../../models/UserModel.dart';
 import 'AdminController.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as path;
 
 class UserController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -18,53 +22,109 @@ class UserController {
   UserModel? _user;
   UserModel? get user => _user;
 
-  Future<void> downloadInvoice(TicketSale ticketSale, RouteModel route) async {
-    print('Estado de aprobación: ${ticketSale.approvalStatus}');
-
-    if (ticketSale.approvalStatus != 'Aprobado') {
-      print('La factura no está aprobada. No se puede descargar.');
+  Future<void> downloadInvoice(
+    BuildContext context,
+    TicketSale ticketSale,
+    RouteModel route,
+  ) async {
+    // Verificar si el usuario está autenticado
+    if (_auth.currentUser == null) {
+      print('Usuario no autenticado. Inicia sesión para descargar la factura.');
+      // Puedes redirigir al usuario a la pantalla de inicio de sesión si es necesario
       return;
     }
 
+    // Verificar y solicitar permisos de almacenamiento
+    var status = await Permission.storage.status;
+    if (!status.isGranted) {
+      status = await Permission.storage.request();
+      if (!status.isGranted) {
+        print('Permiso de almacenamiento denegado.');
+        return;
+      }
+    }
+
     try {
+      // Crear el documento PDF y configurar su contenido
       final pdfLib.Document pdf = pdfLib.Document();
+      final pdfLib.Font font =
+          pdfLib.Font.ttf(await rootBundle.load("fonts/arial.ttf"));
 
       pdf.addPage(
         pdfLib.Page(
           build: (pdfLib.Context context) {
             return pdfLib.Column(
+              crossAxisAlignment: pdfLib.CrossAxisAlignment.start,
               children: [
-                pdfLib.Header(
-                  level: 0,
-                  child: pdfLib.Text('Factura de Compra'),
-                ),
-                pdfLib.Text('ID de Venta: ${ticketSale.id}'),
-                pdfLib.Text('Nombre del Cliente: ${ticketSale.customerName}'),
-                pdfLib.Text('Correo Electrónico: ${ticketSale.customerEmail}'),
-                pdfLib.Text('Monto Total: \$${ticketSale.amount.toString()}'),
-                pdfLib.Text('Cantidad de Boletos: ${ticketSale.quantity}'),
-                pdfLib.Text('Método de Pago: ${ticketSale.paymentMethod}'),
-                pdfLib.Text('Fecha de Venta: ${ticketSale.saleDate.toDate()}'),
-                pdfLib.Text('Ruta: ${route.name}'),
+                // Contenido del PDF
               ],
             );
           },
         ),
       );
 
+      // Obtener el directorio de la aplicación
+      final String dir = (await getApplicationDocumentsDirectory()).path;
+
+      // Generar el archivo PDF
+      final String pdfPath = '$dir/invoice_${ticketSale.id}.pdf';
       final List<int> pdfBytes = await pdf.save();
+      final File file = File(pdfPath);
+      await file.writeAsBytes(pdfBytes);
 
-      // Obtener el directorio de documentos
-      final Directory docDir = await getApplicationDocumentsDirectory();
+      // Subir el archivo a Firebase Storage
+      final Reference storageReference =
+          FirebaseStorage.instance.ref().child('invoices/${ticketSale.id}.pdf');
+      final UploadTask uploadTask = storageReference.putFile(file);
+      await uploadTask
+          .whenComplete(() => print('Archivo subido a Firebase Storage'));
 
-      // Crear el archivo en el directorio de documentos
-      final String pdfFileName = '${docDir.path}/invoice_${ticketSale.id}.pdf';
-      final File pdfFile = File(pdfFileName);
-      await pdfFile.writeAsBytes(pdfBytes);
+      // Almacenar la referencia del archivo en Firestore
+      final String downloadURL = await storageReference.getDownloadURL();
+      await storeInvoiceReference(ticketSale, downloadURL);
 
-      print('Factura descargada con éxito: $pdfFileName');
+      // Informar al usuario que la factura se generó y almacenó con éxito
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Factura generada y almacenada con éxito.'),
+        ),
+      );
+
+      print('Factura generada y almacenada en: $pdfPath');
     } catch (error) {
-      print('Error al descargar la factura: $error');
+      print('Error al descargar y almacenar la factura: $error');
+      throw error;
+    }
+  }
+
+  Future<void> storeInvoiceReference(
+      TicketSale ticketSale, String downloadURL) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('invoice_references')
+          .doc(ticketSale.id)
+          .set({'downloadURL': downloadURL});
+    } catch (error) {
+      print('Error al almacenar la referencia de la factura: $error');
+      throw error;
+    }
+  }
+
+  Future<String?> getInvoiceDownloadURL(String ticketSaleId) async {
+    try {
+      final DocumentSnapshot referenceDoc = await FirebaseFirestore.instance
+          .collection('invoice_references')
+          .doc(ticketSaleId)
+          .get();
+
+      if (referenceDoc.exists) {
+        final data = referenceDoc.data() as Map<String, dynamic>;
+        return data['downloadURL'];
+      } else {
+        return null;
+      }
+    } catch (error) {
+      print('Error al obtener la referencia de descarga de la factura: $error');
       throw error;
     }
   }
@@ -252,9 +312,9 @@ class UserController {
     try {
       final DocumentSnapshot userDoc =
           await _firestore.collection('users').doc(userId).get();
-
       if (userDoc.exists) {
-        return UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
+        final userData = userDoc.data() as Map<String, dynamic>;
+        return UserModel.fromMap(userData);
       } else {
         return null;
       }
@@ -278,18 +338,20 @@ class UserController {
     }
   }
 
-  Future<List<RouteModel>> searchRoutes(String query) async {
+  Future<List<RouteModel>> searchRoutes(
+      String origin, String destination, DateTime date) async {
     try {
       final routesSnapshot = await _firestore
           .collection('routes')
-          .where('destination', isEqualTo: query)
+          .where('origin', isEqualTo: origin)
+          .where('destination', isEqualTo: destination)
+          .where('departureTime',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(date))
           .get();
-
       final routesList = routesSnapshot.docs.map((doc) {
         final routeData = doc.data() as Map<String, dynamic>;
         return RouteModel.fromMap(routeData, doc.id);
       }).toList();
-
       return routesList;
     } catch (e) {
       print('Error al buscar rutas: $e');
@@ -320,13 +382,17 @@ class UserController {
     }
   }
 
-  Future<void> storePurchaseHistory(TicketSale ticketSale) async {
+  Future<String> storePurchaseHistory(TicketSale ticketSale) async {
     try {
-      await FirebaseFirestore.instance
+      // Almacenar la venta en Firestore
+      final DocumentReference ticketSaleRef = await FirebaseFirestore.instance
           .collection('users')
           .doc(ticketSale.userId)
           .collection('purchaseHistory')
           .add(ticketSale.toMap());
+
+      // Devolver el ID de la venta almacenada
+      return ticketSaleRef.id;
     } catch (error) {
       print('Error al almacenar la venta: $error');
       throw error;
@@ -336,7 +402,6 @@ class UserController {
   Future<void> selectRouteAndBuyTickets(
     BuildContext context,
     UserModel user,
-    RouteModel selectedRoute,
     int quantity,
   ) async {
     try {
@@ -370,6 +435,9 @@ class UserController {
       );
 
       if (selectedRoute != null) {
+        // Declarar la variable purchaseHistoryId antes de su primer uso
+        String purchaseHistoryId = '';
+
         final ticketSale = TicketSale(
           id: '',
           customerName: user.fullName,
@@ -381,22 +449,39 @@ class UserController {
           routeId: selectedRoute.id,
           ticketPrice: selectedRoute.ticketPrice,
           userId: user.uid,
+          downloadURL: '', // No necesitamos la URL al momento de la creación
+          purchaseHistoryId:
+              purchaseHistoryId, // Agrega el campo purchaseHistoryId
         );
 
-        final adminController = AdminController();
-        await adminController.addTicketSale(
-          ticketSale,
-          selectedRoute,
-          quantity,
-        );
+        // Almacenar la venta en Firestore
+        purchaseHistoryId = await storePurchaseHistory(ticketSale);
 
+        // Restablecer el campo purchaseHistoryId en el objeto TicketSale
+        ticketSale.purchaseHistoryId = purchaseHistoryId;
+
+        // Almacenar la compra en el historial del usuario
         await storePurchaseHistory(ticketSale);
 
+        // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Compra de boletos registrada con éxito.'),
           ),
         );
+
+        // Solicitar permisos de almacenamiento
+        var status = await Permission.storage.status;
+        if (!status.isGranted) {
+          status = await Permission.storage.request();
+          if (!status.isGranted) {
+            print('Permiso de almacenamiento denegado.');
+            return;
+          }
+        }
+
+        // Generar y descargar la factura
+        await downloadInvoice(context, ticketSale, selectedRoute);
       }
     } catch (e) {
       print('Error al seleccionar la ruta y comprar boletos: $e');
@@ -411,14 +496,9 @@ class UserController {
           .collection('purchaseHistory')
           .get();
 
-      List<TicketSale> purchaseHistory = querySnapshot.docs.map((doc) {
-        TicketSale ticketSale = TicketSale.fromSnapshot(doc);
-        print(
-            'Estado de aprobación para la venta ${ticketSale.id}: ${ticketSale.approvalStatus}');
-        return ticketSale;
-      }).toList();
-
-      return purchaseHistory;
+      return querySnapshot.docs
+          .map((doc) => TicketSale.fromSnapshot(doc))
+          .toList();
     } catch (error) {
       print('Error al obtener el historial de compras: $error');
       throw error;

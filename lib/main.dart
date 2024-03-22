@@ -1,6 +1,21 @@
+import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
+import 'package:universal_io/io.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:app_transprogresochoco/views/Admin/Tickets/AddTicketSale.dart';
+import 'package:app_transprogresochoco/views/User/ProfileScreen.dart';
+import 'package:app_transprogresochoco/views/Admin/Tickets/EditTicketSaleScreen.dart';
+import 'package:app_transprogresochoco/views/User/PurchaseHistoryScreen.dart';
+import 'package:app_transprogresochoco/views/Admin/Tickets/TicketSalesListScreen.dart';
+import 'package:app_transprogresochoco/views/User/SettingsScreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:app_transprogresochoco/views/User/LoginScreen.dart';
 import 'package:app_transprogresochoco/views/Admin/DashboardScreen.dart';
@@ -12,25 +27,18 @@ import 'views/Admin/Routes/EditRouteScreen.dart';
 import 'views/Admin/Routes/AddRouteScreen.dart';
 import 'views/Admin/Routes/ListRoutesScreen.dart';
 import 'views/User/HomeScreen.dart';
-// Importa las vistas de ventas de tiquetes y sus respectivos editores y eliminadores aquí
-import 'package:app_transprogresochoco/views/Admin/Tickets/AddTicketSale.dart';
-import 'package:app_transprogresochoco/views/User/ProfileScreen.dart';
-import 'package:app_transprogresochoco/views/Admin/Tickets/EditTicketSaleScreen.dart';
-import 'package:app_transprogresochoco/views/User/PurchaseHistoryScreen.dart';
-import 'package:app_transprogresochoco/views/Admin/Tickets/TicketSalesListScreen.dart';
-import 'package:app_transprogresochoco/views/User/SettingsScreen.dart';
 
 void main() async {
+  initializeDateFormatting('es_ES', null);
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -93,8 +101,29 @@ class MyApp extends StatelessWidget {
           return HomeScreen(user: user);
         },
         '/purchase_history': (context) => PurchaseHistoryScreen(),
-        '/profile': (context) => ProfileScreen(),
-        '/settings': (context) => SettingsScreen(),
+        '/profile': (context) {
+          final arguments = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>?;
+
+          if (arguments != null && arguments.containsKey('user')) {
+            final user = arguments['user'] as UserModel;
+            return ProfileScreen(user: user);
+          } else {
+            // Manejar el caso en el que los argumentos no sean válidos
+            return Scaffold(
+              body: Center(
+                child: Text(
+                    'Error: Argumentos no válidos para la pantalla de perfil.'),
+              ),
+            );
+          }
+        },
+        '/settings': (context) {
+          final arguments = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
+          final user = arguments['user'] as UserModel;
+          return SettingsScreen(user: user);
+        },
         '/login': (context) => LoginScreen(),
         '/dashboard': (context) => AdminDashboard(),
         '/list_users': (context) => ListUsersView(),
@@ -118,5 +147,14 @@ class MyApp extends StatelessWidget {
         '/list_ticket_sales': (context) => TicketSalesListScreen(),
       },
     );
+  }
+}
+
+Future<void> _checkAndRequestStoragePermission() async {
+  if (io.Platform.isAndroid || io.Platform.isIOS) {
+    var status = await Permission.storage.status;
+    if (!status.isGranted) {
+      await Permission.storage.request();
+    } else if (status.isPermanentlyDenied) {}
   }
 }

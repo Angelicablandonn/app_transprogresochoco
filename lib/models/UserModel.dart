@@ -55,13 +55,13 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      uid: map['uid'],
-      fullName: map['fullName'],
-      email: map['email'],
-      phoneNumber: map['phoneNumber'],
+      uid: map['uid'] ?? '',
+      fullName: map['fullName'] ?? '',
+      email: map['email'] ?? '',
+      phoneNumber: map['phoneNumber'] ?? '',
       profilePicture: map['profilePicture'],
-      isAdmin: map['isAdmin'],
-      password: map['password'],
+      isAdmin: map['isAdmin'] ?? false,
+      password: map['password'] ?? '',
     );
   }
 }

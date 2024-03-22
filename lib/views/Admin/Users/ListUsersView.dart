@@ -1,7 +1,7 @@
-import 'package:app_transprogresochoco/views/Admin/Users/EditUserScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:app_transprogresochoco/controllers/AdminController.dart';
 import 'package:app_transprogresochoco/models/UserModel.dart';
+import 'package:app_transprogresochoco/controllers/AdminController.dart';
+import 'package:app_transprogresochoco/views/Admin/Users/EditUserScreen.dart';
 
 class ListUsersView extends StatefulWidget {
   @override
@@ -11,8 +11,7 @@ class ListUsersView extends StatefulWidget {
 class _ListUsersViewState extends State<ListUsersView> {
   final AdminController _adminController = AdminController();
   late Future<List<Map<String, dynamic>>> _userListFuture;
-  TextEditingController _searchController =
-      TextEditingController(); // Nuevo controlador para el campo de búsqueda
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -53,9 +52,7 @@ class _ListUsersViewState extends State<ListUsersView> {
   }
 
   void _editUser(UserModel user) {
-    // Obtén el UID del usuario
     String uid = user.uid;
-    // Puedes abrir una nueva pantalla de edición de usuario
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -63,14 +60,12 @@ class _ListUsersViewState extends State<ListUsersView> {
       ),
     ).then((result) {
       if (result == true) {
-        // Recargar la lista de usuarios después de la edición
         _loadUserList();
       }
     });
   }
 
-  void _deleteUser(String uid) async {
-    // Muestra un diálogo de confirmación antes de eliminar al usuario
+  Future<void> _deleteUser(String uid) async {
     bool confirmDelete = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -79,13 +74,13 @@ class _ListUsersViewState extends State<ListUsersView> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(false); // No confirmar
+              Navigator.of(context).pop(false);
             },
             child: Text('Cancelar'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(true); // Confirmar
+              Navigator.of(context).pop(true);
             },
             child: Text('Eliminar'),
           ),
@@ -94,11 +89,13 @@ class _ListUsersViewState extends State<ListUsersView> {
     );
 
     if (confirmDelete == true) {
-      // Elimina al usuario utilizando el controlador
       await _adminController.deleteUser(uid);
-      // Recarga la lista de usuarios después de la eliminación
       _loadUserList();
     }
+  }
+
+  Future<void> _refreshUserList() async {
+    _loadUserList();
   }
 
   @override
@@ -112,15 +109,13 @@ class _ListUsersViewState extends State<ListUsersView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Agregar campo de búsqueda
             TextField(
               controller: _searchController,
               onChanged: (query) {
                 if (query.isEmpty) {
-                  _loadUserList(); // Cargar todos los usuarios
+                  _loadUserList();
                 } else {
-                  _searchUsers(
-                      query); // Realizar búsqueda a medida que se escribe
+                  _searchUsers(query);
                 }
               },
               decoration: InputDecoration(
@@ -138,60 +133,62 @@ class _ListUsersViewState extends State<ListUsersView> {
             ),
             SizedBox(height: 16.0),
             Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _userListFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  } else if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                          'Error al cargar la lista de usuarios: ${snapshot.error}'),
-                    );
-                  } else if (snapshot.hasData) {
-                    final userList = snapshot.data!;
-                    if (userList.isEmpty) {
+              child: RefreshIndicator(
+                onRefresh: _refreshUserList,
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _userListFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                            'Error al cargar la lista de usuarios: ${snapshot.error}'),
+                      );
+                    } else if (snapshot.hasData) {
+                      final userList = snapshot.data!;
+                      if (userList.isEmpty) {
+                        return Center(
+                          child: Text('No se encontraron usuarios'),
+                        );
+                      } else {
+                        return ListView.builder(
+                          itemCount: userList.length,
+                          itemBuilder: (context, index) {
+                            final user = UserModel.fromMap(userList[index]);
+                            return ListTile(
+                              title: Text(user.fullName),
+                              subtitle: Text(user.email),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit),
+                                    onPressed: () {
+                                      _editUser(user);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.delete),
+                                    onPressed: () {
+                                      _deleteUser(user.uid);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      }
+                    } else {
                       return Center(
                         child: Text('No se encontraron usuarios'),
                       );
-                    } else {
-                      return ListView.builder(
-                        itemCount: userList.length,
-                        itemBuilder: (context, index) {
-                          final user = UserModel.fromMap(userList[index]);
-                          return ListTile(
-                            title: Text(user.fullName),
-                            subtitle: Text(user.email),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit),
-                                  onPressed: () {
-                                    _editUser(user); // Editar el usuario
-                                  },
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.delete),
-                                  onPressed: () {
-                                    _deleteUser(
-                                        user.uid); // Eliminar el usuario
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
                     }
-                  } else {
-                    return Center(
-                      child: Text('No se encontraron usuarios'),
-                    );
-                  }
-                },
+                  },
+                ),
               ),
             ),
           ],

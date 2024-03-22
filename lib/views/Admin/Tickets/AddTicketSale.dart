@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:app_transprogresochoco/controllers/AdminController.dart';
 import 'package:app_transprogresochoco/models/RouteModel.dart';
 import 'package:app_transprogresochoco/models/TicketSale.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddTicketSaleView extends StatefulWidget {
   @override
@@ -18,6 +18,14 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
   TextEditingController _customerNameController = TextEditingController();
   TextEditingController _customerEmailController = TextEditingController();
   TextEditingController _paymentMethodController = TextEditingController();
+  late Future<List<RouteModel>> _routesFuture;
+  late bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _routesFuture = _controller.getRoutes();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,35 +35,37 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDropDownRoute(),
-              SizedBox(height: 16.0),
-              _buildQuantitySelector(),
-              SizedBox(height: 16.0),
-              _buildTextFormField(
-                  _customerNameController, 'Nombre del Cliente', Icons.person),
-              SizedBox(height: 16.0),
-              _buildTextFormField(
-                  _customerEmailController, 'Correo Electrónico', Icons.email),
-              SizedBox(height: 16.0),
-              _buildTextFormField(
-                  _paymentMethodController, 'Método de Pago', Icons.payment),
-              SizedBox(height: 16.0),
-              _buildAddTicketButton(),
-            ],
-          ),
-        ),
+        child: _isProcessing
+            ? Center(child: CircularProgressIndicator())
+            : Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDropDownRoute(),
+                    SizedBox(height: 16.0),
+                    _buildQuantitySelector(),
+                    SizedBox(height: 16.0),
+                    _buildTextFormField(_customerNameController,
+                        'Nombre del Cliente', Icons.person),
+                    SizedBox(height: 16.0),
+                    _buildTextFormField(_customerEmailController,
+                        'Correo Electrónico', Icons.email),
+                    SizedBox(height: 16.0),
+                    _buildTextFormField(_paymentMethodController,
+                        'Método de Pago', Icons.payment),
+                    SizedBox(height: 16.0),
+                    _buildAddTicketButton(),
+                  ],
+                ),
+              ),
       ),
     );
   }
 
   Widget _buildDropDownRoute() {
     return FutureBuilder<List<RouteModel>>(
-      future: _controller.getRoutes(),
+      future: _routesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -136,39 +146,95 @@ class _AddTicketSaleViewState extends State<AddTicketSaleView> {
     return ElevatedButton(
       onPressed: () async {
         if (_formKey.currentState!.validate()) {
+          setState(() {
+            _isProcessing = true;
+          });
           await _addTicketSale();
+          setState(() {
+            _isProcessing = false;
+          });
         }
       },
       child: Text('Agregar Venta', style: TextStyle(fontSize: 18)),
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(vertical: 16.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        primary: Colors.blue,
+        textStyle: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
   Future<void> _addTicketSale() async {
     if (_selectedRouteId != null) {
       final route = await _controller.getRouteById(_selectedRouteId!);
-
       if (route != null) {
         final FirebaseAuth _auth = FirebaseAuth.instance;
         final User? currentUser = _auth.currentUser;
-
         if (currentUser != null) {
-          final ticketSale = TicketSale(
-            id: '',
-            customerName: _customerNameController.text,
-            customerEmail: _customerEmailController.text,
-            amount: route.ticketPrice * _quantity,
-            quantity: _quantity,
-            paymentMethod: _paymentMethodController.text,
-            saleDate: Timestamp.now(),
-            routeId: route.id,
-            ticketPrice: route.ticketPrice,
-            userId: currentUser.uid,
-          );
-
-          await _controller.addTicketSale(ticketSale, route, _quantity);
-
-          Navigator.of(context).pop();
+          try {
+            await _controller.addTicketSale(
+              TicketSale(
+                id: '',
+                customerName: _customerNameController.text,
+                customerEmail: _customerEmailController.text,
+                amount: route.ticketPrice * _quantity,
+                quantity: _quantity,
+                paymentMethod: _paymentMethodController.text,
+                saleDate: Timestamp.now(),
+                routeId: route.id,
+                ticketPrice: route.ticketPrice,
+                userId: currentUser.uid,
+                downloadURL: '',
+                purchaseHistoryId: '',
+              ),
+              route,
+              _quantity,
+              '', // Add missing arguments here
+              '',
+            );
+            await _storePurchaseHistory();
+          } catch (e) {
+            print('Error al agregar la venta de tiquete: $e');
+          }
         }
+      }
+    }
+  }
+
+  Future<void> _storePurchaseHistory() async {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+    final User? currentUser = _auth.currentUser;
+
+    if (currentUser != null) {
+      try {
+        final List<TicketSale> ticketSales =
+            await _controller.getPurchaseHistory(currentUser.uid);
+        final TicketSale latestTicketSale = ticketSales.isNotEmpty
+            ? ticketSales.first
+            : TicketSale(
+                id: '',
+                customerName: '',
+                customerEmail: '',
+                amount: 0.0,
+                quantity: 0,
+                paymentMethod: '',
+                saleDate: Timestamp.now(),
+                routeId: '',
+                ticketPrice: 0.0,
+                userId: currentUser.uid,
+                downloadURL: '',
+                purchaseHistoryId: '',
+              );
+
+        await _controller.storePurchaseHistory(latestTicketSale);
+      } catch (e) {
+        print('Error al almacenar la compra en el historial: $e');
       }
     }
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:app_transprogresochoco/controllers/UserController.dart';
 import 'package:app_transprogresochoco/models/UserModel.dart';
-import 'package:image_picker/image_picker.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -14,9 +14,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final UserController _userController = UserController();
-  String? _errorMessage; // Variable para almacenar el mensaje de error
-  String? _profilePicture; // Variable para almacenar la ruta de la foto de perfil
+  String? _errorMessage;
+  String? _profilePicture;
   bool _loading = false;
+  bool _isPasswordVisible = false;
 
   Future<void> _register() async {
     final String fullName = _fullNameController.text;
@@ -24,9 +25,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final String password = _passwordController.text;
     final String phoneNumber = _phoneNumberController.text;
 
-    // Verifica si _profilePicture tiene una ruta válida.
     if (_profilePicture != null) {
-      showLoadingIndicator();
+      _showLoadingIndicator();
 
       final UserModel? registeredUser = await _userController.registerUser(
         context,
@@ -36,13 +36,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         phoneNumber,
       );
 
-      hideLoadingIndicator();
+      _hideLoadingIndicator();
 
       if (registeredUser != null) {
-        // Registro exitoso, puedes navegar a la siguiente pantalla
-        // o realizar las acciones necesarias aquí.
+        // Registration successful
+        // Navigate to the next screen or perform necessary actions here.
       } else {
-        // Registro fallido, muestra un mensaje de error.
         setState(() {
           _errorMessage =
               'Error al registrar usuario. Por favor, inténtalo de nuevo.';
@@ -58,8 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _pickProfilePicture() async {
     final imagePicker = ImagePicker();
     final XFile? pickedFile = await imagePicker.pickImage(
-      source: ImageSource
-          .gallery, // Puedes cambiarlo a ImageSource.camera si quieres tomar una foto.
+      source: ImageSource.gallery,
     );
 
     if (pickedFile != null) {
@@ -69,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  void showLoadingIndicator() {
+  void _showLoadingIndicator() {
     setState(() {
       _loading = true;
     });
@@ -80,7 +78,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           content: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(),
@@ -93,113 +90,94 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  void hideLoadingIndicator() {
+  void _hideLoadingIndicator() {
     setState(() {
       _loading = false;
     });
 
-    Navigator.of(context).pop(); // Cierra el AlertDialog
+    Navigator.of(context).pop(); // Close the AlertDialog
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          'Transprogreso Choco',
-          style: TextStyle(
-            fontSize: 24.0,
-            fontWeight: FontWeight.bold,
-          ),
+      appBar: _buildAppBar(),
+      body: _buildBody(),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: Text(
+        'Registro de Usuario',
+        style: TextStyle(
+          fontSize: 24.0,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
-        centerTitle: true,
-        backgroundColor: Colors.black,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  width: 150.0,
-                  height: 150.0,
-                ),
-                const SizedBox(height: 32.0),
-                _buildTextField(
-                    _fullNameController, 'Nombre Completo', Icons.person),
-                const SizedBox(height: 16.0),
-                _buildTextField(
-                    _emailController, 'Correo Electrónico', Icons.email),
-                const SizedBox(height: 16.0),
-                _buildPasswordField(
-                    _passwordController, 'Contraseña', Icons.lock),
-                const SizedBox(height: 16.0),
-                _buildTextField(
-                    _phoneNumberController, 'Número de Teléfono', Icons.phone),
-                const SizedBox(height: 32.0),
-                ElevatedButton(
-                  onPressed: _pickProfilePicture,
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.black,
-                    padding: EdgeInsets.symmetric(
-                      vertical: 12.0,
-                      horizontal: 32.0,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                  ),
-                  child: Text(
-                    'Seleccionar Foto de Perfil',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                    ),
-                  ),
-                ),
-                if (_profilePicture != null)
-                  Text(
-                    'Foto de Perfil seleccionada: $_profilePicture',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                    ),
-                  ),
-                const SizedBox(height: 16.0),
-                ElevatedButton(
-                  onPressed: _register,
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.black,
-                    padding: EdgeInsets.symmetric(
-                      vertical: 12.0,
-                      horizontal: 32.0,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                  ),
-                  child: Text(
-                    'Registrarse',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                    ),
-                  ),
-                ),
-                if (_errorMessage != null)
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 18.0,
-                    ),
-                  ),
-              ],
+      centerTitle: true,
+      backgroundColor: Color(0xFF123456),
+      elevation: 0.0,
+    );
+  }
+
+  Widget _buildBody() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          children: [
+            _buildLogo(),
+            SizedBox(height: 5.0),
+            _buildTextField(
+              _fullNameController,
+              'Nombre Completo',
+              Icons.person_outline_rounded,
             ),
-          ),
+            SizedBox(height: 14.0),
+            _buildTextField(
+              _emailController,
+              'Correo Electrónico',
+              Icons.email_outlined,
+            ),
+            SizedBox(height: 14.0),
+            _buildPasswordField(
+              _passwordController,
+              'Contraseña',
+              Icons.lock_outline,
+            ),
+            SizedBox(height: 14.0),
+            _buildTextField(
+              _phoneNumberController,
+              'Número de Teléfono',
+              Icons.phone_outlined,
+            ),
+            SizedBox(height: 24.0),
+            _buildProfilePictureSelector(),
+            SizedBox(height: 12.0),
+            _buildRegisterButton(),
+            SizedBox(height: 12.0),
+            if (_errorMessage != null)
+              Text(
+                _errorMessage!,
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return Image.asset(
+      'assets/images/logo.png',
+      width: 250.0,
+      height: 250.0,
+      fit: BoxFit.contain,
     );
   }
 
@@ -207,27 +185,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       TextEditingController controller, String labelText, IconData icon) {
     return TextFormField(
       controller: controller,
-      style: TextStyle(
-        fontSize: 18.0,
-        color: Colors.black,
-      ),
       decoration: InputDecoration(
         labelText: labelText,
-        labelStyle: TextStyle(
-          color: Colors.black,
-          fontSize: 18.0,
+        prefixIcon: Icon(
+          icon,
+          color: Colors.blue,
         ),
+        fillColor: Colors.grey[200],
+        filled: true,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          borderRadius: BorderRadius.circular(15.0),
           borderSide: BorderSide.none,
         ),
-        filled: true,
-        fillColor: Colors.grey[200],
-        contentPadding: EdgeInsets.symmetric(
-          vertical: 16.0,
-          horizontal: 16.0,
-        ),
-        prefixIcon: Icon(icon),
+        contentPadding: EdgeInsets.all(16.0),
+      ),
+      style: TextStyle(
+        fontSize: 16.0,
+        color: Colors.black,
       ),
     );
   }
@@ -236,29 +210,117 @@ class _RegisterScreenState extends State<RegisterScreen> {
       TextEditingController controller, String labelText, IconData icon) {
     return TextFormField(
       controller: controller,
-      obscureText: true,
-      style: TextStyle(
-        fontSize: 18.0,
-        color: Colors.black,
-      ),
+      obscureText: !_isPasswordVisible,
       decoration: InputDecoration(
         labelText: labelText,
-        labelStyle: TextStyle(
-          color: Colors.black,
-          fontSize: 18.0,
+        prefixIcon: Icon(
+          icon,
+          color: Colors.blue,
         ),
+        suffixIcon: GestureDetector(
+          onTap: () {
+            setState(() {
+              _isPasswordVisible = !_isPasswordVisible;
+            });
+          },
+          child: Icon(
+            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+            color: Colors.blue,
+          ),
+        ),
+        fillColor: Colors.grey[200],
+        filled: true,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          borderRadius: BorderRadius.circular(15.0),
           borderSide: BorderSide.none,
         ),
-        filled: true,
-        fillColor: Colors.grey[200],
-        contentPadding: EdgeInsets.symmetric(
-          vertical: 16.0,
-          horizontal: 16.0,
-        ),
-        prefixIcon: Icon(icon),
+        contentPadding: EdgeInsets.all(16.0),
       ),
+      style: TextStyle(
+        fontSize: 16.0,
+        color: Colors.black,
+      ),
+    );
+  }
+
+  Widget _buildProfilePictureSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Seleccionar Foto de Perfil',
+          style: TextStyle(
+            fontSize: 18.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8.0),
+        GestureDetector(
+          onTap: _pickProfilePicture,
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.camera_alt_outlined,
+                  color: Colors.blue,
+                  size: 20.0,
+                ),
+                SizedBox(width: 8.0),
+                Text(
+                  'Seleccionar desde Galería',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_profilePicture != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              'Foto de Perfil seleccionada: $_profilePicture',
+              style: TextStyle(
+                fontSize: 14.0,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildRegisterButton() {
+    return ElevatedButton(
+      onPressed: _register,
+      style: ElevatedButton.styleFrom(
+        primary: Color(0xFF0D9276),
+        padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        shadowColor: Colors.black38,
+        elevation: 8.0,
+      ),
+      child: _loading
+          ? CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            )
+          : Text(
+              'Registrarse',
+              style: TextStyle(
+                fontSize: 20.0,
+                color: Colors.white,
+              ),
+            ),
     );
   }
 }

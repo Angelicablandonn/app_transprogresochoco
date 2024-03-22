@@ -18,6 +18,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneNumberController;
   late TextEditingController _passwordController;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -26,8 +27,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
     _emailController = TextEditingController(text: widget.user.email);
     _phoneNumberController =
         TextEditingController(text: widget.user.phoneNumber);
-    _passwordController =
-        TextEditingController(); // No muestres la contraseña actual
+    _passwordController = TextEditingController();
   }
 
   @override
@@ -40,34 +40,36 @@ class _EditUserScreenState extends State<EditUserScreen> {
   }
 
   void _updateUser() async {
-    final updatedUser = UserModel(
-      uid: widget.user.uid,
-      fullName: _fullNameController.text,
-      email: _emailController.text,
-      phoneNumber: _phoneNumberController.text,
-      profilePicture: widget.user.profilePicture,
-      isAdmin: widget.user.isAdmin,
-      password: _passwordController.text,
-    );
-
-    try {
-      await _adminController.updateUser(updatedUser);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Usuario actualizado con éxito.'),
-          duration: Duration(seconds: 3),
-        ),
+    if (_formKey.currentState!.validate()) {
+      final updatedUser = UserModel(
+        uid: widget.user.uid,
+        fullName: _fullNameController.text,
+        email: _emailController.text,
+        phoneNumber: _phoneNumberController.text,
+        profilePicture: widget.user.profilePicture,
+        isAdmin: widget.user.isAdmin,
+        password: _passwordController.text,
       );
 
-      Navigator.of(context).pop(); // Regresa a la pantalla anterior
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al actualizar el usuario: $e'),
-          duration: Duration(seconds: 3),
-        ),
-      );
+      try {
+        await _adminController.updateUser(updatedUser);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Usuario actualizado con éxito.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+        Navigator.of(context).pop();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al actualizar el usuario: $e'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -79,19 +81,42 @@ class _EditUserScreenState extends State<EditUserScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            _buildTextField(_fullNameController, 'Nombre Completo'),
-            _buildTextField(_emailController, 'Correo Electrónico'),
-            _buildTextField(_phoneNumberController, 'Número de Teléfono'),
-            _buildPasswordTextField(_passwordController, 'Nueva Contraseña'),
-            SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _updateUser,
-              child: Text('Guardar Cambios'),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _buildLabel('Nombre Completo'),
+                _buildTextField(_fullNameController, 'Nombre Completo'),
+                _buildLabel('Correo Electrónico'),
+                _buildTextField(_emailController, 'Correo Electrónico'),
+                _buildLabel('Número de Teléfono'),
+                _buildTextField(_phoneNumberController, 'Número de Teléfono'),
+                _buildLabel('Nueva Contraseña'),
+                _buildPasswordTextField(
+                    _passwordController, 'Nueva Contraseña'),
+                SizedBox(height: 24.0),
+                ElevatedButton(
+                  onPressed: _updateUser,
+                  child: Text('Guardar Cambios'),
+                ),
+              ],
             ),
-          ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 16.0,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -106,6 +131,12 @@ class _EditUserScreenState extends State<EditUserScreen> {
           labelText: label,
           border: OutlineInputBorder(),
         ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Por favor, ingrese un valor válido';
+          }
+          return null;
+        },
       ),
     );
   }
@@ -121,6 +152,12 @@ class _EditUserScreenState extends State<EditUserScreen> {
           border: OutlineInputBorder(),
         ),
         obscureText: true,
+        validator: (value) {
+          if (value != null && value.isNotEmpty && value.length < 6) {
+            return 'La contraseña debe tener al menos 6 caracteres';
+          }
+          return null;
+        },
       ),
     );
   }
